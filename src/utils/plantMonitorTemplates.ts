@@ -309,7 +309,7 @@ export const esp32WifiSetupGuide = `
 
 ### 3. Vajalikud teegid
 Lisa järgmised teegid projekti platformio.ini faili:
-```
+\`\`\`
 lib_deps =
   ottowinter/ESPAsyncWebServer-esphome
   bblanchon/ArduinoJson
@@ -317,7 +317,7 @@ lib_deps =
   adafruit/Adafruit Unified Sensor
   marcoschwartz/LiquidCrystal_I2C
   xviluxa/XT_DAC_Audio
-```
+\`\`\`
 
 ### 4. Riistvara ühendamine:
 
@@ -371,4 +371,5 @@ lib_deps =
    - Parool: taimesober
 2. Ava veebibrauser ja mine aadressile http://192.168.4.1
 3. Kasuta veebiliidest taimede jälgimiseks ja juhtimiseks
+\`\`\`
 `;

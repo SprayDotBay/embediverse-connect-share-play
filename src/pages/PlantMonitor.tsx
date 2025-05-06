@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from "react";
 import { PlantDashboard } from "@/components/plant-monitor/PlantDashboard";
 import { Button } from "@/components/ui/button";
-import { Settings, Refresh, Speaker, Download } from "lucide-react";
+import { Settings, RefreshCw, Speaker, Download } from "lucide-react";
 import { useSerialPort } from "@/hooks/useSerialPort";
 import { useToast } from "@/hooks/use-toast";
 
@@ -140,7 +139,7 @@ const PlantMonitor = () => {
                   Ekspordi andmed
                 </Button>
                 <Button onClick={fetchPlantData} disabled={isLoading}>
-                  <Refresh className={`mr-2 h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+                  <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
                   Värskenda
                 </Button>
               </>
