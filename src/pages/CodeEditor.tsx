@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -431,6 +430,7 @@ void GPIOViewer::update() {
   
   const handleBleConnect = async (deviceId: string) => {
     try {
+      // Now we pass a string ID which our updated hook can handle
       const connected = await connectBle(deviceId);
       
       if (connected) {
