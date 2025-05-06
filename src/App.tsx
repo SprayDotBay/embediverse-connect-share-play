@@ -12,6 +12,7 @@ import Devices from "./pages/Devices";
 import Projects from "./pages/Projects";
 import CodeEditor from "./pages/CodeEditor";
 import DataViz from "./pages/DataViz";
+import PlantMonitor from "./pages/PlantMonitor";
 import Community from "./pages/Community";
 import NotFound from "./pages/NotFound";
 
@@ -37,6 +38,7 @@ const App = () => (
                   <Route path="/projects" element={<Projects />} />
                   <Route path="/editor" element={<CodeEditor />} />
                   <Route path="/data" element={<DataViz />} />
+                  <Route path="/plants" element={<PlantMonitor />} />
                   <Route path="/community" element={<Community />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>

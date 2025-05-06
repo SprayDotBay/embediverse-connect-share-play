@@ -2,210 +2,244 @@
 import { useState, useEffect, useCallback } from 'react';
 
 interface BleDeviceInfo {
-  id: string;
+  device: BluetoothDevice;
   name: string;
-  rssi: number;
+  id: string;
+  connected: boolean;
+  services?: BluetoothRemoteGATTService[];
+}
+
+interface BleCharacteristic {
+  uuid: string;
+  service: BluetoothRemoteGATTService;
+  characteristic: BluetoothRemoteGATTCharacteristic;
 }
 
 export const useBleDevice = () => {
   const [device, setDevice] = useState<BluetoothDevice | null>(null);
-  const [server, setServer] = useState<BluetoothRemoteGATTServer | null>(null);
-  const [characteristic, setCharacteristic] = useState<BluetoothRemoteGATTCharacteristic | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
-  const [availableDevices, setAvailableDevices] = useState<BleDeviceInfo[]>([]);
-  const [isScanning, setIsScanning] = useState(false);
+  const [deviceInfo, setDeviceInfo] = useState<BleDeviceInfo | null>(null);
+  const [connecting, setConnecting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [characteristics, setCharacteristics] = useState<BleCharacteristic[]>([]);
   
-  // Check if Web Bluetooth API is supported
   const isSupported = 'bluetooth' in navigator;
   
-  // Scan for available BLE devices
-  const scanDevices = useCallback(async () => {
-    if (!isSupported) return;
+  const scanForDevices = useCallback(async (serviceUUIDs?: string[]) => {
+    if (!isSupported) {
+      setError('Bluetooth is not supported in this browser');
+      return null;
+    }
     
     try {
-      setIsScanning(true);
-      setAvailableDevices([]);
+      const device = await navigator.bluetooth.requestDevice({
+        // Accept all devices if no service UUIDs specified
+        filters: serviceUUIDs && serviceUUIDs.length > 0 ? 
+          [{ services: serviceUUIDs }] : 
+          [{ name: '' }],
+        // You can also scan for all devices
+        // acceptAllDevices: true,
+        optionalServices: ['battery_service', 'device_information']
+      });
       
-      const deviceList: BleDeviceInfo[] = [];
+      setDevice(device);
       
-      // Create a device scan options object
-      const options = {
-        acceptAllDevices: true,
-        optionalServices: ['0000ffe0-0000-1000-8000-00805f9b34fb'] // Common BLE UART service
+      const newDeviceInfo: BleDeviceInfo = {
+        device,
+        name: device.name || 'Unknown Device',
+        id: device.id,
+        connected: device.gatt ? device.gatt.connected : false
       };
       
-      // Request the device
-      const device = await navigator.bluetooth.requestDevice(options);
-      
-      if (device) {
-        deviceList.push({
-          id: device.id,
-          name: device.name || 'Unknown Device',
-          rssi: -50, // Web Bluetooth API doesn't provide RSSI directly
-        });
-      }
-      
-      setAvailableDevices(deviceList);
+      setDeviceInfo(newDeviceInfo);
+      return device;
     } catch (error) {
-      console.error('BLE scan error:', error);
-    } finally {
-      setIsScanning(false);
+      console.error('Error scanning for BLE devices:', error);
+      setError('Failed to scan for Bluetooth devices');
+      return null;
     }
   }, [isSupported]);
   
-  // Connect to a BLE device
-  const connect = useCallback(async (deviceId?: string) => {
-    if (!isSupported) {
-      throw new Error('Web Bluetooth API is not supported in this browser');
+  const connect = useCallback(async (targetDevice: BluetoothDevice | null = null) => {
+    const deviceToConnect = targetDevice || device;
+    
+    if (!deviceToConnect) {
+      setError('No device to connect to. Please scan for devices first.');
+      return false;
     }
     
     try {
-      let selectedDevice: BluetoothDevice;
+      setConnecting(true);
+      setError(null);
       
-      if (deviceId && availableDevices.length > 0) {
-        // Connect to a specific device from the list
-        const foundDevice = availableDevices.find(d => d.id === deviceId);
-        if (!foundDevice) {
-          throw new Error('Device not found in the available devices list');
-        }
-        // In reality, you can't reconnect by ID in Web Bluetooth API
-        // We need to request the device again
-        selectedDevice = await navigator.bluetooth.requestDevice({
-          filters: [{ services: ['0000ffe0-0000-1000-8000-00805f9b34fb'] }]
+      if (!deviceToConnect.gatt) {
+        throw new Error('Device does not have GATT server');
+      }
+      
+      const server = await deviceToConnect.gatt.connect();
+      const services = await server.getPrimaryServices();
+      
+      // Update device info with services
+      setDeviceInfo(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          connected: true,
+          services
+        };
+      });
+      
+      // Discover characteristics for each service
+      const allCharacteristics: BleCharacteristic[] = [];
+      
+      for (const service of services) {
+        const serviceCharacteristics = await service.getCharacteristics();
+        
+        serviceCharacteristics.forEach(characteristic => {
+          allCharacteristics.push({
+            uuid: characteristic.uuid,
+            service,
+            characteristic
+          });
         });
-      } else {
-        // Request user to select a device
-        selectedDevice = await navigator.bluetooth.requestDevice({
-          acceptAllDevices: true,
-          optionalServices: ['0000ffe0-0000-1000-8000-00805f9b34fb']
-        });
       }
       
-      if (!selectedDevice) {
-        throw new Error('No device selected');
-      }
+      setCharacteristics(allCharacteristics);
+      setConnecting(false);
       
-      setDevice(selectedDevice);
-      
-      // Connect to the GATT server
-      const gattServer = await selectedDevice.gatt?.connect();
-      if (!gattServer) {
-        throw new Error('Failed to connect to GATT server');
-      }
-      
-      setServer(gattServer);
-      
-      // Get the primary service
-      const service = await gattServer.getPrimaryService('0000ffe0-0000-1000-8000-00805f9b34fb');
-      
-      // Get the characteristic for communication
-      const char = await service.getCharacteristic('0000ffe1-0000-1000-8000-00805f9b34fb');
-      
-      setCharacteristic(char);
-      setIsConnected(true);
-      
-      // Set up notifications
-      await char.startNotifications();
-      
-      // Add listener for value changes
-      char.addEventListener('characteristicvaluechanged', handleCharacteristicValueChanged);
+      // Set up disconnect listener
+      deviceToConnect.addEventListener('gattserverdisconnected', () => {
+        setDeviceInfo(prev => prev ? { ...prev, connected: false } : null);
+      });
       
       return true;
     } catch (error) {
-      console.error('BLE connection error:', error);
-      setIsConnected(false);
+      console.error('Error connecting to BLE device:', error);
+      setError('Failed to connect to Bluetooth device');
+      setConnecting(false);
       return false;
     }
-  }, [availableDevices, isSupported]);
+  }, [device]);
   
-  // Handle incoming BLE data
-  const handleCharacteristicValueChanged = (event: Event) => {
-    const characteristic = event.target as BluetoothRemoteGATTCharacteristic;
-    const value = characteristic.value;
-    
-    if (value) {
-      // Convert the received buffer to a string
-      let data = '';
-      for (let i = 0; i < value.byteLength; i++) {
-        data += String.fromCharCode(value.getUint8(i));
-      }
-      
-      console.log('Received BLE data:', data);
-      
-      // Notify subscribers of new data (to be implemented)
-    }
-  };
-  
-  // Disconnect from the BLE device
   const disconnect = useCallback(async () => {
-    try {
-      if (characteristic) {
-        // Stop notifications
-        try {
-          await characteristic.stopNotifications();
-          characteristic.removeEventListener('characteristicvaluechanged', handleCharacteristicValueChanged);
-        } catch (e) {
-          console.warn('Error stopping notifications:', e);
-        }
-      }
-      
-      if (server && server.connected) {
-        server.disconnect();
-      }
-      
-      setCharacteristic(null);
-      setServer(null);
-      setDevice(null);
-      setIsConnected(false);
-      
-      return true;
-    } catch (error) {
-      console.error('BLE disconnection error:', error);
+    if (!device || !device.gatt) {
       return false;
     }
-  }, [characteristic, server]);
-  
-  // Write data to the BLE device
-  const writeData = useCallback(async (data: string): Promise<boolean> => {
-    if (!characteristic || !isConnected) return false;
     
     try {
-      const encoder = new TextEncoder();
-      const encoded = encoder.encode(data);
-      await characteristic.writeValue(encoded);
+      device.gatt.disconnect();
+      setDeviceInfo(prev => prev ? { ...prev, connected: false } : null);
       return true;
     } catch (error) {
-      console.error('BLE write error:', error);
+      console.error('Error disconnecting from BLE device:', error);
       return false;
     }
-  }, [characteristic, isConnected]);
+  }, [device]);
+
+  const readCharacteristic = useCallback(async (uuid: string) => {
+    const char = characteristics.find(c => c.characteristic.uuid === uuid);
+    
+    if (!char) {
+      setError(`Characteristic with UUID ${uuid} not found`);
+      return null;
+    }
+    
+    try {
+      const value = await char.characteristic.readValue();
+      return value;
+    } catch (error) {
+      console.error('Error reading characteristic:', error);
+      setError('Failed to read characteristic value');
+      return null;
+    }
+  }, [characteristics]);
+  
+  const writeCharacteristic = useCallback(async (uuid: string, data: ArrayBuffer) => {
+    const char = characteristics.find(c => c.characteristic.uuid === uuid);
+    
+    if (!char) {
+      setError(`Characteristic with UUID ${uuid} not found`);
+      return false;
+    }
+    
+    try {
+      await char.characteristic.writeValue(data);
+      return true;
+    } catch (error) {
+      console.error('Error writing characteristic:', error);
+      setError('Failed to write characteristic value');
+      return false;
+    }
+  }, [characteristics]);
+  
+  const startNotifications = useCallback(async (uuid: string, listener: EventListener) => {
+    const char = characteristics.find(c => c.characteristic.uuid === uuid);
+    
+    if (!char) {
+      setError(`Characteristic with UUID ${uuid} not found`);
+      return false;
+    }
+    
+    try {
+      const characteristic = char.characteristic;
+      await characteristic.startNotifications();
+      
+      // Use assertive casting to unknown first to fix the type error
+      characteristic.addEventListener('characteristicvaluechanged', listener as EventListener);
+      
+      return true;
+    } catch (error) {
+      console.error('Error starting notifications:', error);
+      setError('Failed to start notifications');
+      return false;
+    }
+  }, [characteristics]);
+  
+  const stopNotifications = useCallback(async (uuid: string, listener: EventListener) => {
+    const char = characteristics.find(c => c.characteristic.uuid === uuid);
+    
+    if (!char) {
+      setError(`Characteristic with UUID ${uuid} not found`);
+      return false;
+    }
+    
+    try {
+      const characteristic = char.characteristic;
+      await characteristic.stopNotifications();
+      
+      // Use assertive casting to unknown first to fix the type error
+      characteristic.removeEventListener('characteristicvaluechanged', listener as EventListener);
+      
+      return true;
+    } catch (error) {
+      console.error('Error stopping notifications:', error);
+      setError('Failed to stop notifications');
+      return false;
+    }
+  }, [characteristics]);
   
   // Clean up on unmount
   useEffect(() => {
     return () => {
-      if (characteristic) {
-        try {
-          characteristic.stopNotifications();
-          characteristic.removeEventListener('characteristicvaluechanged', handleCharacteristicValueChanged);
-        } catch (e) {
-          console.warn('Error stopping notifications during cleanup:', e);
-        }
-      }
-      
-      if (server && server.connected) {
-        server.disconnect();
+      // Disconnect BLE device on unmount
+      if (device?.gatt?.connected) {
+        device.gatt.disconnect();
       }
     };
-  }, [characteristic, server]);
+  }, [device]);
   
   return {
     isSupported,
-    isConnected,
+    device,
+    deviceInfo,
+    characteristics,
+    connecting,
+    error,
+    scanForDevices,
     connect,
     disconnect,
-    writeData,
-    scanDevices,
-    availableDevices,
-    isScanning,
+    readCharacteristic,
+    writeCharacteristic,
+    startNotifications,
+    stopNotifications
   };
 };
