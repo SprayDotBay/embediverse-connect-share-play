@@ -47,12 +47,25 @@ export const ComparisonChart: React.FC<ComparisonChartProps> = ({ data }) => {
             <XAxis dataKey="month" />
             <YAxis />
             <Tooltip 
-              contentStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.7)', border: 'none', borderRadius: '4px', fontSize: '12px' }}
+              contentStyle={{ 
+                backgroundColor: 'rgba(0, 0, 0, 0.7)', 
+                border: 'none', 
+                borderRadius: '4px', 
+                fontSize: '12px' 
+              }}
               labelStyle={{ fontWeight: 'bold', marginBottom: '4px' }}
             />
             <Legend />
-            <Bar dataKey="temperature" stackId="a" fill="#8884d8" />
-            <Bar dataKey="humidity" stackId="b" fill="#82ca9d" />
+            <Bar 
+              dataKey="temperature" 
+              stackId="a" 
+              fill="#8884d8" 
+            />
+            <Bar 
+              dataKey="humidity" 
+              stackId="b" 
+              fill="#82ca9d" 
+            />
           </BarChart>
         </ResponsiveContainer>
       </CardContent>
