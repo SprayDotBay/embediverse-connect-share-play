@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { ThemeProvider } from "@/providers/ThemeProvider";
+import { BleProvider } from "@/components/providers/BleProvider";
 import { AppSidebar } from "@/components/AppSidebar";
 import Dashboard from "./pages/Dashboard";
 import Devices from "./pages/Devices";
@@ -22,30 +23,32 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider defaultTheme="dark">
       <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <SidebarProvider>
-            <div className="min-h-screen flex w-full">
-              <AppSidebar />
-              <main className="flex-1">
-                <div className="flex items-center p-4 border-b">
-                  <SidebarTrigger />
-                </div>
-                <Routes>
-                  <Route path="/" element={<Dashboard />} />
-                  <Route path="/devices" element={<Devices />} />
-                  <Route path="/projects" element={<Projects />} />
-                  <Route path="/editor" element={<CodeEditor />} />
-                  <Route path="/data" element={<DataViz />} />
-                  <Route path="/plants" element={<PlantMonitor />} />
-                  <Route path="/community" element={<Community />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </main>
-            </div>
-          </SidebarProvider>
-        </BrowserRouter>
+        <BleProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <SidebarProvider>
+              <div className="min-h-screen flex w-full">
+                <AppSidebar />
+                <main className="flex-1">
+                  <div className="flex items-center p-4 border-b">
+                    <SidebarTrigger />
+                  </div>
+                  <Routes>
+                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/devices" element={<Devices />} />
+                    <Route path="/projects" element={<Projects />} />
+                    <Route path="/editor" element={<CodeEditor />} />
+                    <Route path="/data" element={<DataViz />} />
+                    <Route path="/plants" element={<PlantMonitor />} />
+                    <Route path="/community" element={<Community />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </main>
+              </div>
+            </SidebarProvider>
+          </BrowserRouter>
+        </BleProvider>
       </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>

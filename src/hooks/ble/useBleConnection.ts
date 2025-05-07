@@ -2,6 +2,7 @@
 import { useCallback } from 'react';
 import { useBleContext } from './BleContext';
 import { useBleScanner } from './useBleScanner';
+import { BleDeviceInfo } from './types';
 
 export const useBleConnection = () => {
   const { 
@@ -52,15 +53,15 @@ export const useBleConnection = () => {
       const server = await deviceToConnect.gatt.connect();
       const services = await server.getPrimaryServices();
       
-      // Update device info with services
-      setDeviceInfo(prev => {
-        if (!prev) return null;
-        return {
-          ...prev,
+      // Update device info with services - fixed type issue
+      if (deviceInfo) {
+        const updatedDeviceInfo: BleDeviceInfo = {
+          ...deviceInfo,
           connected: true,
           services
         };
-      });
+        setDeviceInfo(updatedDeviceInfo);
+      }
       
       // Discover characteristics for each service
       const allCharacteristics = [];
@@ -83,7 +84,14 @@ export const useBleConnection = () => {
       
       // Set up disconnect listener
       deviceToConnect.addEventListener('gattserverdisconnected', () => {
-        setDeviceInfo(prev => prev ? { ...prev, connected: false } : null);
+        // Fixed type issue here
+        if (deviceInfo) {
+          const updatedDeviceInfo: BleDeviceInfo = {
+            ...deviceInfo,
+            connected: false
+          };
+          setDeviceInfo(updatedDeviceInfo);
+        }
         setIsConnected(false);
       });
       
@@ -94,7 +102,7 @@ export const useBleConnection = () => {
       setConnecting(false);
       return false;
     }
-  }, [device, scanForDevices, setConnecting, setDeviceInfo, setError, setCharacteristics, setIsConnected]);
+  }, [device, scanForDevices, setConnecting, setDeviceInfo, setError, setCharacteristics, setIsConnected, deviceInfo]);
   
   const disconnect = useCallback(async () => {
     if (!device || !device.gatt) {
@@ -103,14 +111,21 @@ export const useBleConnection = () => {
     
     try {
       device.gatt.disconnect();
-      setDeviceInfo(prev => prev ? { ...prev, connected: false } : null);
+      // Fixed type issue here
+      if (deviceInfo) {
+        const updatedDeviceInfo: BleDeviceInfo = {
+          ...deviceInfo,
+          connected: false
+        };
+        setDeviceInfo(updatedDeviceInfo);
+      }
       setIsConnected(false);
       return true;
     } catch (error) {
       console.error('Error disconnecting from BLE device:', error);
       return false;
     }
-  }, [device, setDeviceInfo, setIsConnected]);
+  }, [device, setDeviceInfo, setIsConnected, deviceInfo]);
 
   return {
     isConnected: useBleContext().isConnected,
