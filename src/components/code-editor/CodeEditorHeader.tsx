@@ -5,7 +5,7 @@ import { Upload, Save } from "lucide-react";
 import { useCodeEditor } from "@/contexts/CodeEditorContext";
 
 export const CodeEditorHeader: React.FC = () => {
-  const { handleSave, handleUpload, handleCreateEsp32Project } = useCodeEditor();
+  const { handleSave, handleCreateEsp32Project } = useCodeEditor();
   
   return (
     <div className="flex justify-between items-center">
