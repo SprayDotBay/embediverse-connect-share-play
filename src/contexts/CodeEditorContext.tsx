@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, ReactNode, useEffect } from 'react';
 import { useFileExplorer, FileItem } from "@/hooks/code-editor/useFileExplorer";
-import { useCodeEditor } from "@/hooks/code-editor/useCodeEditor";
+import { useCodeEditorState } from "@/hooks/code-editor/useCodeEditor";
 import { useSerialMonitor, SerialMessage } from "@/hooks/code-editor/useSerialMonitor";
 import { useBleManager } from "@/hooks/code-editor/useBleManager";
 import { useGpioControl } from "@/hooks/code-editor/useGpioControl";
@@ -68,7 +68,7 @@ export const CodeEditorProvider: React.FC<{ children: ReactNode }> = ({ children
   const fileExplorerHooks = useFileExplorer();
   const { activeFile, setActiveFile } = fileExplorerHooks;
   
-  const editorHooks = useCodeEditor(activeFile, setActiveFile);
+  const editorHooks = useCodeEditorState(activeFile);
   const serialMonitorHooks = useSerialMonitor();
   const bleManagerHooks = useBleManager();
   const gpioControlHooks = useGpioControl(

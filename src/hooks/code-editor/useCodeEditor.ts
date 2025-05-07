@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { getLanguageFromFile } from "@/utils/codeTemplates";
 import { toast } from "@/hooks/use-toast";
 
-export const useCodeEditor = (activeFile: string, setActiveFile: (file: string) => void) => {
+export const useCodeEditorState = (activeFile: string) => {
   const [activeTab, setActiveTab] = useState("code");
   const [activeDeviceTab, setActiveDeviceTab] = useState("serial");
   
