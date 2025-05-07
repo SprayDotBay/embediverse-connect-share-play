@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 
 interface BleDeviceInfo {
@@ -114,7 +115,8 @@ export const useBleDevice = () => {
         setError('Failed to find device with the provided ID');
         return false;
       }
-    } else if (targetDeviceOrId instanceof BluetoothDevice) {
+    } else if (targetDeviceOrId && typeof targetDeviceOrId === 'object' && 'gatt' in targetDeviceOrId) {
+      // Check if it's a BluetoothDevice by checking for the gatt property
       deviceToConnect = targetDeviceOrId;
     } else {
       deviceToConnect = device;
