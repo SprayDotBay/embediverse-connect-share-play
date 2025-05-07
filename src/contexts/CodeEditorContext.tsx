@@ -1,20 +1,19 @@
 
 import React, { createContext, useContext, ReactNode, useEffect } from 'react';
-import { useFileExplorer, FileItem } from "@/hooks/code-editor/useFileExplorer";
-import { useCodeEditorState } from "@/hooks/code-editor/useCodeEditor";
-import { useSerialMonitor, SerialMessage } from "@/hooks/code-editor/useSerialMonitor";
+import { FileItem } from "@/hooks/code-editor/useFileExplorer";
+import { SerialMessage } from "@/hooks/code-editor/useSerialMonitor";
+import { useFileOperations } from "@/hooks/code-editor/useFileOperations";
+import { useSerialMonitor } from "@/hooks/code-editor/useSerialMonitor";
 import { useBleManager } from "@/hooks/code-editor/useBleManager";
 import { useGpioControl } from "@/hooks/code-editor/useGpioControl";
 import { useProjectTemplates } from "@/hooks/code-editor/useProjectTemplates";
 
 interface CodeEditorContextType {
-  // File explorer state
+  // File explorer and editor state
   files: FileItem[];
   setFiles: React.Dispatch<React.SetStateAction<FileItem[]>>;
   activeFile: string;
   setActiveFile: React.Dispatch<React.SetStateAction<string>>;
-  
-  // Code editor state
   fileContents: Record<string, string>;
   setFileContents: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   activeTab: string;
@@ -64,11 +63,8 @@ interface CodeEditorContextType {
 const CodeEditorContext = createContext<CodeEditorContextType | null>(null);
 
 export const CodeEditorProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // Initialize hooks
-  const fileExplorerHooks = useFileExplorer();
-  const { activeFile, setActiveFile } = fileExplorerHooks;
-  
-  const editorHooks = useCodeEditorState(activeFile);
+  // Initialize hooks with unified structure
+  const fileOperations = useFileOperations();
   const serialMonitorHooks = useSerialMonitor();
   const bleManagerHooks = useBleManager();
   const gpioControlHooks = useGpioControl(
@@ -77,8 +73,8 @@ export const CodeEditorProvider: React.FC<{ children: ReactNode }> = ({ children
   );
   
   const projectTemplateHooks = useProjectTemplates({
-    setFileContents: editorHooks.setFileContents,
-    handleFileSelect: fileExplorerHooks.handleFileSelect,
+    setFileContents: fileOperations.setFileContents,
+    handleFileSelect: fileOperations.handleFileSelect,
   });
 
   // Process GPIO data from serial messages
@@ -99,7 +95,7 @@ export const CodeEditorProvider: React.FC<{ children: ReactNode }> = ({ children
 
   // Adapter function for upload that uses the serial connection status
   const handleUpload = () => {
-    editorHooks.handleUpload(
+    fileOperations.handleUpload(
       serialMonitorHooks.serialHooks.isConnected || bleManagerHooks.bleHooks.isConnected
     );
   };
@@ -107,11 +103,8 @@ export const CodeEditorProvider: React.FC<{ children: ReactNode }> = ({ children
   return (
     <CodeEditorContext.Provider
       value={{
-        // File explorer
-        ...fileExplorerHooks,
-        
-        // Code editor
-        ...editorHooks,
+        // File operations
+        ...fileOperations,
         
         // Serial monitor
         ...serialMonitorHooks,
