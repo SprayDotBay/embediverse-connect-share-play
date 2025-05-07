@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { ThemeProvider } from "@/providers/ThemeProvider";
-import { BleProvider } from "@/components/providers/BleProvider";
+import { BleProvider } from "@/hooks/ble/BleContext"; // Change import
 import { AppSidebar } from "@/components/AppSidebar";
 import Dashboard from "./pages/Dashboard";
 import Devices from "./pages/Devices";

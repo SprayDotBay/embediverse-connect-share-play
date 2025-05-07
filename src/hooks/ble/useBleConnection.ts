@@ -55,12 +55,11 @@ export const useBleConnection = () => {
       
       // Update device info with services - fixed type issue
       if (deviceInfo) {
-        const updatedDeviceInfo: BleDeviceInfo = {
+        setDeviceInfo({
           ...deviceInfo,
           connected: true,
           services
-        };
-        setDeviceInfo(updatedDeviceInfo);
+        });
       }
       
       // Discover characteristics for each service
@@ -86,11 +85,10 @@ export const useBleConnection = () => {
       deviceToConnect.addEventListener('gattserverdisconnected', () => {
         // Fixed type issue here
         if (deviceInfo) {
-          const updatedDeviceInfo: BleDeviceInfo = {
+          setDeviceInfo({
             ...deviceInfo,
             connected: false
-          };
-          setDeviceInfo(updatedDeviceInfo);
+          });
         }
         setIsConnected(false);
       });
@@ -113,11 +111,10 @@ export const useBleConnection = () => {
       device.gatt.disconnect();
       // Fixed type issue here
       if (deviceInfo) {
-        const updatedDeviceInfo: BleDeviceInfo = {
+        setDeviceInfo({
           ...deviceInfo,
           connected: false
-        };
-        setDeviceInfo(updatedDeviceInfo);
+        });
       }
       setIsConnected(false);
       return true;
