@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { ThemeProvider } from "@/providers/ThemeProvider";
-import { BleProvider } from "@/hooks/ble/BleContext"; // Change import
+import { BleProvider } from "@/hooks/ble/BleContext";
 import { AppSidebar } from "@/components/AppSidebar";
 import Dashboard from "./pages/Dashboard";
 import Devices from "./pages/Devices";
@@ -14,6 +14,7 @@ import Projects from "./pages/Projects";
 import CodeEditor from "./pages/CodeEditor";
 import DataViz from "./pages/DataViz";
 import PlantMonitor from "./pages/PlantMonitor";
+import WifiManager from "./pages/WifiManager";
 import Community from "./pages/Community";
 import NotFound from "./pages/NotFound";
 
@@ -41,6 +42,7 @@ const App = () => (
                     <Route path="/editor" element={<CodeEditor />} />
                     <Route path="/data" element={<DataViz />} />
                     <Route path="/plants" element={<PlantMonitor />} />
+                    <Route path="/wifi" element={<WifiManager />} />
                     <Route path="/community" element={<Community />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>

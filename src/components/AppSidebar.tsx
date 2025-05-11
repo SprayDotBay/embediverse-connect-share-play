@@ -18,9 +18,10 @@ import {
   Settings, 
   Users, 
   FileCode, 
-  MonitorIcon
+  MonitorIcon,
+  Wifi,
+  Globe
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./ThemeToggle";
 import { Button } from "./ui/button";
 
@@ -50,6 +51,11 @@ const mainMenuItems = [
     title: "Data Visualization",
     path: "/data",
     icon: Database,
+  },
+  {
+    title: "WiFi Manager",
+    path: "/wifi",
+    icon: Wifi,
   },
   {
     title: "Community",
