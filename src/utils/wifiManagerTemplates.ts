@@ -227,17 +227,17 @@ void loop() {
                 accessPointMode = false;
                 
                 // Send response
-                Serial.println("{\"status\":\"connected\",\"ip\":\"" + deviceIpAddress + "\"}");
+                Serial.println("{\\\"status\\\":\\\"connected\\\",\\\"ip\\\":\\\"" + deviceIpAddress + "\\\"}");
               } else {
                 Serial.println("\\nConnection failed!");
-                Serial.println("{\"status\":\"failed\"}");
+                Serial.println("{\\\"status\\\":\\\"failed\\\"}");
               }
             }
           }
           else if (cmd == "disconnectWifi") {
             Serial.println("Disconnecting from WiFi");
             WiFi.disconnect();
-            Serial.println("{\"status\":\"disconnected\"}");
+            Serial.println("{\\\"status\\\":\\\"disconnected\\\"}");
           }
           else if (cmd == "updatePortalSettings") {
             if (doc.containsKey("name")) {
@@ -258,7 +258,7 @@ void loop() {
             }
             
             saveConfig();
-            Serial.println("{\"status\":\"updated\"}");
+            Serial.println("{\\\"status\\\":\\\"updated\\\"}");
           }
         }
       }
@@ -361,25 +361,25 @@ void handleRoot() {
   
   html += "function scanNetworks() {";
   html += "  const networkList = document.getElementById('network-list');";
-  html += "  networkList.innerHTML = '<div class=\"loading\">Scanning...</div>';";
+  html += "  networkList.innerHTML = '<div class=\\\"loading\\\">Scanning...</div>';";
   html += "  fetch('/api/scan')";
   html += "    .then(response => response.json())";
   html += "    .then(data => {";
   html += "      let html = '';";
   html += "      if (data.networks.length === 0) {";
-  html += "        html = '<div class=\"no-networks\">No networks found</div>';";
+  html += "        html = '<div class=\\\"no-networks\\\">No networks found</div>';";
   html += "      } else {";
-  html += "        html = '<div class=\"network-grid\">';";
+  html += "        html = '<div class=\\\"network-grid\\\">';";
   html += "        data.networks.forEach(network => {";
   html += "          let signalClass = 'weak';";
   html += "          if (network.rssi > -50) signalClass = 'excellent';";
   html += "          else if (network.rssi > -65) signalClass = 'good';";
   html += "          else if (network.rssi > -75) signalClass = 'fair';";
-  html += "          html += `<div class=\"network-item\" onclick=\"selectNetwork('${network.ssid}', ${network.secure})\">`;";
-  html += "          html += `<div class=\"network-name\">${network.ssid}</div>`;";
-  html += "          html += `<div class=\"network-info\">`;";
-  html += "          html += `<div class=\"signal ${signalClass}\"></div>`;";
-  html += "          if (network.secure) html += '<div class=\"secure\"></div>';";
+  html += "          html += `<div class=\\\"network-item\\\" onclick=\\\"selectNetwork('${network.ssid}', ${network.secure})\\\">`;";
+  html += "          html += `<div class=\\\"network-name\\\">${network.ssid}</div>`;";
+  html += "          html += `<div class=\\\"network-info\\\">`;";
+  html += "          html += `<div class=\\\"signal ${signalClass}\\\"></div>`;";
+  html += "          if (network.secure) html += '<div class=\\\"secure\\\"></div>';";
   html += "          html += `</div></div>`;";
   html += "        });";
   html += "        html += '</div>';";
@@ -387,7 +387,7 @@ void handleRoot() {
   html += "      networkList.innerHTML = html;";
   html += "    })";
   html += "    .catch(error => {";
-  html += "      networkList.innerHTML = '<div class=\"error\">Error scanning networks</div>';";
+  html += "      networkList.innerHTML = '<div class=\\\"error\\\">Error scanning networks</div>';";
   html += "    });";
   html += "}";
   
@@ -485,7 +485,7 @@ void handleScan() {
 
 void handleConnect() {
   if (!server.hasArg("plain")) {
-    server.send(400, "application/json", "{\"status\":\"error\",\"message\":\"Missing request body\"}");
+    server.send(400, "application/json", "{\\\"status\\\":\\\"error\\\",\\\"message\\\":\\\"Missing request body\\\"}");
     return;
   }
   
@@ -494,7 +494,7 @@ void handleConnect() {
   DeserializationError error = deserializeJson(doc, body);
   
   if (error) {
-    server.send(400, "application/json", "{\"status\":\"error\",\"message\":\"Invalid JSON\"}");
+    server.send(400, "application/json", "{\\\"status\\\":\\\"error\\\",\\\"message\\\":\\\"Invalid JSON\\\"}");
     return;
   }
   
@@ -503,12 +503,12 @@ void handleConnect() {
     strcpy(config.ssid, "");
     strcpy(config.password, "");
     saveConfig();
-    server.send(200, "application/json", "{\"status\":\"disconnected\"}");
+    server.send(200, "application/json", "{\\\"status\\\":\\\"disconnected\\\"}");
     return;
   }
   
   if (!doc.containsKey("ssid")) {
-    server.send(400, "application/json", "{\"status\":\"error\",\"message\":\"Missing SSID\"}");
+    server.send(400, "application/json", "{\\\"status\\\":\\\"error\\\",\\\"message\\\":\\\"Missing SSID\\\"}");
     return;
   }
   
@@ -532,9 +532,9 @@ void handleConnect() {
   if (WiFi.status() == WL_CONNECTED) {
     deviceIpAddress = WiFi.localIP().toString();
     accessPointMode = false;
-    server.send(200, "application/json", "{\"status\":\"connected\",\"ip\":\"" + deviceIpAddress + "\"}");
+    server.send(200, "application/json", "{\\\"status\\\":\\\"connected\\\",\\\"ip\\\":\\\"" + deviceIpAddress + "\\\"}");
   } else {
-    server.send(200, "application/json", "{\"status\":\"failed\"}");
+    server.send(200, "application/json", "{\\\"status\\\":\\\"failed\\\"}");
   }
 }
 
