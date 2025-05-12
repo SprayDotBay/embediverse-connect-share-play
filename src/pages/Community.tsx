@@ -1,64 +1,49 @@
 
 import React, { useState } from "react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Search, ThumbsUp, MessageCircle, Award, Code, Share2 } from "lucide-react";
-import { ProjectGallery } from "@/components/community/ProjectGallery";
 import { CommunityFeed } from "@/components/community/CommunityFeed";
-import { Leaderboard } from "@/components/community/Leaderboard";
+import { ProjectGallery } from "@/components/community/ProjectGallery";
 import { Challenges } from "@/components/community/Challenges";
+import { Leaderboard } from "@/components/community/Leaderboard";
+import { EspUIDemo } from "@/components/community/EspUIDemo";
 
 const Community = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-  };
-
   return (
     <div className="container py-8">
       <div className="flex flex-col gap-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold tracking-tight">Community</h1>
-          <div className="flex gap-2">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input 
-                type="search" 
-                placeholder="Search community..." 
-                className="pl-8 w-[250px]" 
-                value={searchTerm}
-                onChange={handleSearch}
-              />
-            </div>
-            <Button>Share Project</Button>
-          </div>
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold tracking-tight">
+            Community
+          </h1>
         </div>
 
-        <Tabs defaultValue="gallery" className="w-full">
-          <TabsList className="mb-4">
-            <TabsTrigger value="gallery">Project Gallery</TabsTrigger>
-            <TabsTrigger value="feed">Community Feed</TabsTrigger>
-            <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
+        <Tabs defaultValue="feed">
+          <TabsList>
+            <TabsTrigger value="feed">Feed</TabsTrigger>
+            <TabsTrigger value="projects">Projects</TabsTrigger>
             <TabsTrigger value="challenges">Challenges</TabsTrigger>
+            <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
+            <TabsTrigger value="espui-demo">ESP UI Demo</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="gallery">
-            <ProjectGallery searchTerm={searchTerm} />
-          </TabsContent>
-          
           <TabsContent value="feed">
-            <CommunityFeed searchTerm={searchTerm} />
+            <CommunityFeed />
           </TabsContent>
           
-          <TabsContent value="leaderboard">
-            <Leaderboard searchTerm={searchTerm} />
+          <TabsContent value="projects">
+            <ProjectGallery />
           </TabsContent>
           
           <TabsContent value="challenges">
-            <Challenges searchTerm={searchTerm} />
+            <Challenges />
+          </TabsContent>
+          
+          <TabsContent value="leaderboard">
+            <Leaderboard />
+          </TabsContent>
+          
+          <TabsContent value="espui-demo">
+            <EspUIDemo />
           </TabsContent>
         </Tabs>
       </div>
