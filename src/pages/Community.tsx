@@ -6,6 +6,7 @@ import { ProjectGallery } from "@/components/community/ProjectGallery";
 import { Challenges } from "@/components/community/Challenges";
 import { Leaderboard } from "@/components/community/Leaderboard";
 import { EspUIDemo } from "@/components/community/EspUIDemo";
+import { EspSettings } from "@/components/community/EspSettings";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 
@@ -37,6 +38,7 @@ const Community = () => {
             <TabsTrigger value="challenges">Challenges</TabsTrigger>
             <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
             <TabsTrigger value="espui-demo">ESP UI Demo</TabsTrigger>
+            <TabsTrigger value="esp-settings">ESP Settings</TabsTrigger>
           </TabsList>
           
           <TabsContent value="feed">
@@ -57,6 +59,10 @@ const Community = () => {
           
           <TabsContent value="espui-demo">
             <EspUIDemo />
+          </TabsContent>
+          
+          <TabsContent value="esp-settings">
+            <EspSettings />
           </TabsContent>
         </Tabs>
       </div>
