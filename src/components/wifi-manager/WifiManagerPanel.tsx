@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Wifi, WifiOff, Globe, Upload, RefreshCw, Settings, Info } from "lucide-react";
+import { Wifi, WifiOff, Globe, Upload, RefreshCw, Settings, Info, Server } from "lucide-react";
 import { useSerialPort } from "@/hooks/useSerialPort";
 import { ThemeToggle } from "../ThemeToggle";
 import { NetworkScanner } from "./NetworkScanner";
@@ -12,6 +11,7 @@ import { WifiConnectionForm } from "./WifiConnectionForm";
 import { PortalSettings } from "./PortalSettings";
 import { FirmwareUpdate } from "./FirmwareUpdate";
 import { DeviceInfo } from "./DeviceInfo";
+import { ESPAsyncWebServerGuide } from "./ESPAsyncWebServerGuide";
 
 interface Network {
   ssid: string;
@@ -229,7 +229,7 @@ export const WifiManagerPanel: React.FC = () => {
         
         <Tabs defaultValue="networks" value={activeTab} onValueChange={setActiveTab} className="w-full">
           <div className="px-6 pt-6">
-            <TabsList className="grid grid-cols-4 gap-4">
+            <TabsList className="grid grid-cols-5 gap-4">
               <TabsTrigger value="networks" className="flex items-center gap-1">
                 <Wifi className="w-4 h-4" /> Networks
               </TabsTrigger>
@@ -241,6 +241,9 @@ export const WifiManagerPanel: React.FC = () => {
               </TabsTrigger>
               <TabsTrigger value="info" className="flex items-center gap-1">
                 <Info className="w-4 h-4" /> Device Info
+              </TabsTrigger>
+              <TabsTrigger value="asyncserver" className="flex items-center gap-1">
+                <Server className="w-4 h-4" /> Async Server
               </TabsTrigger>
             </TabsList>
           </div>
@@ -287,6 +290,10 @@ export const WifiManagerPanel: React.FC = () => {
             
             <TabsContent value="info">
               <DeviceInfo isConnected={isConnected} />
+            </TabsContent>
+            
+            <TabsContent value="asyncserver">
+              <ESPAsyncWebServerGuide />
             </TabsContent>
           </CardContent>
         </Tabs>

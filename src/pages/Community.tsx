@@ -6,8 +6,12 @@ import { ProjectGallery } from "@/components/community/ProjectGallery";
 import { Challenges } from "@/components/community/Challenges";
 import { Leaderboard } from "@/components/community/Leaderboard";
 import { EspUIDemo } from "@/components/community/EspUIDemo";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
 
 const Community = () => {
+  const [searchTerm, setSearchTerm] = useState("");
+
   return (
     <div className="container py-8">
       <div className="flex flex-col gap-6">
@@ -15,6 +19,15 @@ const Community = () => {
           <h1 className="text-3xl font-bold tracking-tight">
             Community
           </h1>
+          <div className="relative w-64">
+            <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search community..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-8"
+            />
+          </div>
         </div>
 
         <Tabs defaultValue="feed">
@@ -27,19 +40,19 @@ const Community = () => {
           </TabsList>
           
           <TabsContent value="feed">
-            <CommunityFeed />
+            <CommunityFeed searchTerm={searchTerm} />
           </TabsContent>
           
           <TabsContent value="projects">
-            <ProjectGallery />
+            <ProjectGallery searchTerm={searchTerm} />
           </TabsContent>
           
           <TabsContent value="challenges">
-            <Challenges />
+            <Challenges searchTerm={searchTerm} />
           </TabsContent>
           
           <TabsContent value="leaderboard">
-            <Leaderboard />
+            <Leaderboard searchTerm={searchTerm} />
           </TabsContent>
           
           <TabsContent value="espui-demo">
