@@ -2,17 +2,16 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { Wifi, WifiOff, Globe, Upload, RefreshCw, Settings, Info } from "lucide-react";
 import { useSerialPort } from "@/hooks/useSerialPort";
-import { EspWebInstaller } from "../esp-web-tools/EspWebInstaller";
-import { WifiNetworkList } from "./WifiNetworkList";
 import { ThemeToggle } from "../ThemeToggle";
+import { NetworkScanner } from "./NetworkScanner";
+import { WifiConnectionForm } from "./WifiConnectionForm";
+import { PortalSettings } from "./PortalSettings";
+import { FirmwareUpdate } from "./FirmwareUpdate";
+import { DeviceInfo } from "./DeviceInfo";
 
 interface Network {
   ssid: string;
@@ -248,196 +247,46 @@ export const WifiManagerPanel: React.FC = () => {
           
           <CardContent className="p-6">
             <TabsContent value="networks" className="space-y-4 mt-0">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-medium">Available Networks</h3>
-                <Button 
-                  variant="outline" 
-                  onClick={scanNetworks}
-                  disabled={isScanning}
-                  className="flex items-center gap-2"
-                >
-                  <RefreshCw className={`w-4 h-4 ${isScanning ? 'animate-spin' : ''}`} />
-                  {isScanning ? 'Scanning...' : 'Scan'}
-                </Button>
-              </div>
+              <NetworkScanner 
+                networks={networks}
+                isScanning={isScanning}
+                scanNetworks={scanNetworks}
+                onSelectNetwork={handleSelectNetwork}
+                selectedSsid={ssid}
+              />
               
-              <div className="border rounded-md overflow-hidden">
-                <WifiNetworkList 
-                  networks={networks} 
-                  onSelectNetwork={handleSelectNetwork} 
-                  selectedSsid={ssid}
-                />
-              </div>
-              
-              <div className="grid gap-4 pt-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="ssid">Network Name (SSID)</Label>
-                  <Input 
-                    id="ssid" 
-                    value={ssid} 
-                    onChange={(e) => setSsid(e.target.value)}
-                    placeholder="Enter network name"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="password">Password</Label>
-                  <Input 
-                    id="password" 
-                    type="password" 
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter password"
-                  />
-                </div>
-                <div className="flex items-center justify-between pt-2">
-                  <div className="flex items-center space-x-2">
-                    <Switch 
-                      id="captive-portal" 
-                      checked={captivePortalEnabled}
-                      onCheckedChange={setCaptivePortalEnabled}
-                    />
-                    <Label htmlFor="captive-portal">Enable Captive Portal</Label>
-                  </div>
-                  
-                  {isConnected ? (
-                    <Button 
-                      variant="destructive" 
-                      onClick={handleDisconnect}
-                    >
-                      Disconnect
-                    </Button>
-                  ) : (
-                    <Button 
-                      onClick={connectToNetwork}
-                      disabled={connectionStatus === "connecting"}
-                    >
-                      {connectionStatus === "connecting" ? (
-                        <>
-                          <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                          Connecting...
-                        </>
-                      ) : (
-                        'Connect'
-                      )}
-                    </Button>
-                  )}
-                </div>
-              </div>
-              
-              {connectionStatus === "failed" && (
-                <Alert variant="destructive">
-                  <AlertTitle>Connection Failed</AlertTitle>
-                  <AlertDescription>
-                    Failed to connect to the WiFi network. Please check your credentials and try again.
-                  </AlertDescription>
-                </Alert>
-              )}
+              <WifiConnectionForm 
+                ssid={ssid}
+                setSSID={setSsid}
+                password={password}
+                setPassword={setPassword}
+                captivePortalEnabled={captivePortalEnabled}
+                setCaptivePortalEnabled={setCaptivePortalEnabled}
+                isConnected={isConnected}
+                connectionStatus={connectionStatus}
+                handleConnect={connectToNetwork}
+                handleDisconnect={handleDisconnect}
+              />
             </TabsContent>
             
-            <TabsContent value="settings" className="space-y-4 mt-0">
-              <h3 className="text-lg font-medium">Portal Configuration</h3>
-              <div className="grid gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="portal-name">Portal Name</Label>
-                  <Input 
-                    id="portal-name" 
-                    value={customPortalName}
-                    onChange={(e) => setCustomPortalName(e.target.value)}
-                    placeholder="Enter portal name"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label>Theme Selection</Label>
-                  <div className="flex gap-4">
-                    <div 
-                      className={`p-4 border rounded-md flex-1 cursor-pointer flex flex-col items-center ${customTheme === "light" ? "border-primary ring-2 ring-primary/50" : ""}`}
-                      onClick={() => setCustomTheme("light")}
-                    >
-                      <div className="w-full h-12 bg-white border border-gray-200 rounded-md mb-2"></div>
-                      <span>Light Mode</span>
-                    </div>
-                    <div 
-                      className={`p-4 border rounded-md flex-1 cursor-pointer flex flex-col items-center ${customTheme === "dark" ? "border-primary ring-2 ring-primary/50" : ""}`}
-                      onClick={() => setCustomTheme("dark")}
-                    >
-                      <div className="w-full h-12 bg-zinc-800 border border-zinc-700 rounded-md mb-2"></div>
-                      <span>Dark Mode</span>
-                    </div>
-                    <div 
-                      className={`p-4 border rounded-md flex-1 cursor-pointer flex flex-col items-center ${customTheme === "teal" ? "border-primary ring-2 ring-primary/50" : ""}`}
-                      onClick={() => setCustomTheme("teal")}
-                    >
-                      <div className="w-full h-12 bg-gradient-to-r from-teal to-blue-medium rounded-md mb-2"></div>
-                      <span>Teal Theme</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Switch 
-                    id="captive-portal-setting" 
-                    checked={captivePortalEnabled}
-                    onCheckedChange={setCaptivePortalEnabled}
-                  />
-                  <Label htmlFor="captive-portal-setting">Enable Captive Portal</Label>
-                </div>
-                <div className="pt-2">
-                  <Button onClick={savePortalSettings}>
-                    Save Settings
-                  </Button>
-                </div>
-              </div>
+            <TabsContent value="settings">
+              <PortalSettings 
+                customPortalName={customPortalName}
+                setCustomPortalName={setCustomPortalName}
+                customTheme={customTheme}
+                setCustomTheme={setCustomTheme}
+                captivePortalEnabled={captivePortalEnabled}
+                setCaptivePortalEnabled={setCaptivePortalEnabled}
+                savePortalSettings={savePortalSettings}
+              />
             </TabsContent>
             
-            <TabsContent value="update" className="space-y-4 mt-0">
-              <h3 className="text-lg font-medium">Firmware Update</h3>
-              <p className="text-muted-foreground">Update your device's firmware over the air using ESP Web Tools.</p>
-              
-              <div className="my-6">
-                <EspWebInstaller />
-              </div>
+            <TabsContent value="update">
+              <FirmwareUpdate />
             </TabsContent>
             
-            <TabsContent value="info" className="space-y-4 mt-0">
-              <h3 className="text-lg font-medium">Device Information</h3>
-              <div className="grid gap-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-muted-foreground">Device Type</p>
-                    <p>ESP32</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-muted-foreground">MAC Address</p>
-                    <p>AA:BB:CC:DD:EE:FF</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-muted-foreground">IP Address</p>
-                    <p>{isConnected ? "192.168.1.100" : "Not connected"}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-muted-foreground">Firmware Version</p>
-                    <p>v1.2.0</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-muted-foreground">Uptime</p>
-                    <p>3h 24m 15s</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-muted-foreground">CPU Temperature</p>
-                    <p>42.5°C</p>
-                  </div>
-                </div>
-                
-                <Alert className="mt-4">
-                  <Globe className="h-4 w-4" />
-                  <AlertTitle>Web Portal</AlertTitle>
-                  <AlertDescription>
-                    {isConnected 
-                      ? <span>Access your device at <a href="http://192.168.1.100" target="_blank" className="underline">http://192.168.1.100</a></span>
-                      : <span>Connect to WiFi to access the web portal</span>
-                    }
-                  </AlertDescription>
-                </Alert>
-              </div>
+            <TabsContent value="info">
+              <DeviceInfo isConnected={isConnected} />
             </TabsContent>
           </CardContent>
         </Tabs>

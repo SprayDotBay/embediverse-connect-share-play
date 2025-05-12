@@ -1,4 +1,5 @@
 
+// ESP32 WiFi Manager firmware template
 export const esp32WifiManagerTemplate = `
 // ESP32 WiFi Manager Firmware for Embediverse
 // Custom WiFi manager with captive portal and OTA updates
@@ -22,7 +23,10 @@ export const esp32WifiManagerTemplate = `
 #define DNS_PORT 53
 #define HTTP_PORT 80
 #define MAX_NETWORKS 20
+`;
 
+// Additional ESP32 firmware code sections
+export const esp32WifiManagerConfig = `
 // Global variables
 WiFiManager wm;
 DNSServer dnsServer;
@@ -47,7 +51,9 @@ struct Config {
 };
 
 Config config;
+`;
 
+export const esp32WifiManagerFunctions = `
 // Forward declarations
 void setupServer();
 void handleRoot();
@@ -61,7 +67,9 @@ void saveConfig();
 String getMAC();
 float getCpuTemperature();
 void startCaptivePortal();
+`;
 
+export const esp32WifiManagerSetup = `
 void setup() {
   Serial.begin(115200);
   Serial.println("\\n\\nEmbediverse WiFi Manager Starting...");
@@ -138,7 +146,10 @@ void setup() {
   
   Serial.println("Embediverse WiFi Manager Ready!");
 }
+`;
 
+// Create a separate file for the WiFi Manager's loop function
+export const esp32WifiManagerLoop = `
 void loop() {
   // Update uptime
   uptime = millis() - startTime;
@@ -227,17 +238,17 @@ void loop() {
                 accessPointMode = false;
                 
                 // Send response
-                Serial.println("{\\\"status\\\":\\\"connected\\\",\\\"ip\\\":\\\"" + deviceIpAddress + "\\\"}");
+                Serial.println("{\\"status\\":\\"connected\\",\\"ip\\":\\"" + deviceIpAddress + "\\"}");
               } else {
                 Serial.println("\\nConnection failed!");
-                Serial.println("{\\\"status\\\":\\\"failed\\\"}");
+                Serial.println("{\\"status\\":\\"failed\\"}");
               }
             }
           }
           else if (cmd == "disconnectWifi") {
             Serial.println("Disconnecting from WiFi");
             WiFi.disconnect();
-            Serial.println("{\\\"status\\\":\\\"disconnected\\\"}");
+            Serial.println("{\\"status\\":\\"disconnected\\"}");
           }
           else if (cmd == "updatePortalSettings") {
             if (doc.containsKey("name")) {
@@ -258,7 +269,7 @@ void loop() {
             }
             
             saveConfig();
-            Serial.println("{\\\"status\\\":\\\"updated\\\"}");
+            Serial.println("{\\"status\\":\\"updated\\"}");
           }
         }
       }
@@ -268,452 +279,9 @@ void loop() {
   // Short delay
   delay(10);
 }
-
-void setupServer() {
-  // API routes
-  server.on("/", handleRoot);
-  server.on("/api/scan", HTTP_GET, handleScan);
-  server.on("/api/connect", HTTP_POST, handleConnect);
-  server.on("/api/status", HTTP_GET, handleStatus);
-  server.on("/api/update", HTTP_POST, []() {
-    server.sendHeader("Connection", "close");
-    server.send(200, "text/plain", Update.hasError() ? "Update failed!" : "Update success!");
-    delay(1000);
-    ESP.restart();
-  }, []() {
-    HTTPUpload& upload = server.upload();
-    handleUpdate(upload);
-  });
-  
-  // Theme file
-  server.on("/theme.css", handleTheme);
-  
-  // Start server
-  server.begin();
-  Serial.println("HTTP server started");
-}
-
-void handleRoot() {
-  String html = "<!DOCTYPE html><html><head>";
-  html += "<meta name='viewport' content='width=device-width, initial-scale=1'>";
-  html += "<title>" + portalName + "</title>";
-  html += "<link rel='stylesheet' href='/theme.css'>";
-  html += "</head><body>";
-  html += "<div class='container'>";
-  html += "<h1>" + portalName + "</h1>";
-  
-  if (WiFi.status() == WL_CONNECTED) {
-    html += "<div class='status connected'>Connected to WiFi</div>";
-    html += "<div class='info-grid'>";
-    html += "<div><span>SSID:</span> " + String(config.ssid) + "</div>";
-    html += "<div><span>IP Address:</span> " + WiFi.localIP().toString() + "</div>";
-    html += "<div><span>MAC:</span> " + deviceMacAddress + "</div>";
-    html += "<div><span>Signal:</span> " + String(WiFi.RSSI()) + " dBm</div>";
-    html += "</div>";
-    html += "<button onclick='disconnectWifi()' class='button danger'>Disconnect</button>";
-  } else {
-    html += "<div class='status disconnected'>Disconnected</div>";
-    html += "<div class='card'>";
-    html += "<h2>Connect to WiFi</h2>";
-    html += "<div class='form-group'>";
-    html += "<label for='ssid'>Network Name (SSID)</label>";
-    html += "<input type='text' id='ssid' placeholder='Enter SSID'>";
-    html += "</div>";
-    html += "<div class='form-group'>";
-    html += "<label for='password'>Password</label>";
-    html += "<input type='password' id='password' placeholder='Enter password'>";
-    html += "</div>";
-    html += "<button onclick='connectWifi()' class='button primary'>Connect</button>";
-    html += "</div>";
-  }
-  
-  html += "<div class='card'>";
-  html += "<h2>Available Networks</h2>";
-  html += "<div id='network-list'><div class='loading'>Scanning...</div></div>";
-  html += "<button onclick='scanNetworks()' class='button secondary'>Refresh</button>";
-  html += "</div>";
-  
-  html += "<div class='card'>";
-  html += "<h2>Device Information</h2>";
-  html += "<div class='info-grid'>";
-  html += "<div><span>Device:</span> ESP32</div>";
-  html += "<div><span>MAC Address:</span> " + deviceMacAddress + "</div>";
-  html += "<div><span>Uptime:</span> <span id='uptime'></span></div>";
-  html += "<div><span>CPU Temp:</span> <span id='cpu-temp'></span></div>";
-  html += "</div>";
-  html += "</div>";
-  
-  html += "<div class='footer'>";
-  html += "Embediverse WiFi Manager v1.0";
-  html += "</div>";
-  html += "</div>";
-
-  html += "<script>";
-  html += "let uptimeInterval;";
-  html += "function formatUptime(ms) {";
-  html += "  let seconds = Math.floor(ms / 1000);";
-  html += "  let minutes = Math.floor(seconds / 60);";
-  html += "  let hours = Math.floor(minutes / 60);";
-  html += "  seconds = seconds % 60;";
-  html += "  minutes = minutes % 60;";
-  html += "  return hours + 'h ' + minutes + 'm ' + seconds + 's';";
-  html += "}";
-  
-  html += "function scanNetworks() {";
-  html += "  const networkList = document.getElementById('network-list');";
-  html += "  networkList.innerHTML = '<div class=\\\"loading\\\">Scanning...</div>';";
-  html += "  fetch('/api/scan')";
-  html += "    .then(response => response.json())";
-  html += "    .then(data => {";
-  html += "      let html = '';";
-  html += "      if (data.networks.length === 0) {";
-  html += "        html = '<div class=\\\"no-networks\\\">No networks found</div>';";
-  html += "      } else {";
-  html += "        html = '<div class=\\\"network-grid\\\">';";
-  html += "        data.networks.forEach(network => {";
-  html += "          let signalClass = 'weak';";
-  html += "          if (network.rssi > -50) signalClass = 'excellent';";
-  html += "          else if (network.rssi > -65) signalClass = 'good';";
-  html += "          else if (network.rssi > -75) signalClass = 'fair';";
-  html += "          html += `<div class=\\\"network-item\\\" onclick=\\\"selectNetwork('${network.ssid}', ${network.secure})\\\">`;";
-  html += "          html += `<div class=\\\"network-name\\\">${network.ssid}</div>`;";
-  html += "          html += `<div class=\\\"network-info\\\">`;";
-  html += "          html += `<div class=\\\"signal ${signalClass}\\\"></div>`;";
-  html += "          if (network.secure) html += '<div class=\\\"secure\\\"></div>';";
-  html += "          html += `</div></div>`;";
-  html += "        });";
-  html += "        html += '</div>';";
-  html += "      }";
-  html += "      networkList.innerHTML = html;";
-  html += "    })";
-  html += "    .catch(error => {";
-  html += "      networkList.innerHTML = '<div class=\\\"error\\\">Error scanning networks</div>';";
-  html += "    });";
-  html += "}";
-  
-  html += "function selectNetwork(ssid, secure) {";
-  html += "  document.getElementById('ssid').value = ssid;";
-  html += "  document.getElementById('password').focus();";
-  html += "}";
-  
-  html += "function connectWifi() {";
-  html += "  const ssid = document.getElementById('ssid').value;";
-  html += "  const password = document.getElementById('password').value;";
-  html += "  if (!ssid) {";
-  html += "    alert('Please enter a network name');";
-  html += "    return;";
-  html += "  }";
-  html += "  fetch('/api/connect', {";
-  html += "    method: 'POST',";
-  html += "    headers: { 'Content-Type': 'application/json' },";
-  html += "    body: JSON.stringify({ ssid, password })";
-  html += "  })";
-  html += "  .then(response => response.json())";
-  html += "  .then(data => {";
-  html += "    if (data.status === 'connected') {";
-  html += "      alert('Connected successfully! Refreshing page...');";
-  html += "      setTimeout(() => { location.reload(); }, 1000);";
-  html += "    } else {";
-  html += "      alert('Connection failed. Please check your credentials.');";
-  html += "    }";
-  html += "  })";
-  html += "  .catch(error => {";
-  html += "    alert('Error connecting to WiFi');";
-  html += "  });";
-  html += "}";
-  
-  html += "function disconnectWifi() {";
-  html += "  if (confirm('Are you sure you want to disconnect from WiFi?')) {";
-  html += "    fetch('/api/connect', {";
-  html += "      method: 'POST',";
-  html += "      headers: { 'Content-Type': 'application/json' },";
-  html += "      body: JSON.stringify({ disconnect: true })";
-  html += "    })";
-  html += "    .then(response => response.json())";
-  html += "    .then(data => {";
-  html += "      alert('Disconnected from WiFi. Refreshing page...');";
-  html += "      setTimeout(() => { location.reload(); }, 1000);";
-  html += "    })";
-  html += "    .catch(error => {";
-  html += "      alert('Error disconnecting from WiFi');";
-  html += "    });";
-  html += "  }";
-  html += "}";
-  
-  html += "function updateStatus() {";
-  html += "  fetch('/api/status')";
-  html += "    .then(response => response.json())";
-  html += "    .then(data => {";
-  html += "      document.getElementById('uptime').textContent = formatUptime(data.uptime);";
-  html += "      document.getElementById('cpu-temp').textContent = data.temperature + '°C';";
-  html += "    });";
-  html += "}";
-  
-  html += "document.addEventListener('DOMContentLoaded', () => {";
-  html += "  scanNetworks();";
-  html += "  updateStatus();";
-  html += "  uptimeInterval = setInterval(updateStatus, 1000);";
-  html += "});";
-  html += "</script>";
-  
-  html += "</body></html>";
-  
-  server.send(200, "text/html", html);
-}
-
-void handleScan() {
-  Serial.println("Scanning networks...");
-  int numNetworks = WiFi.scanNetworks();
-  
-  DynamicJsonDocument doc(2048);
-  JsonArray networks = doc.createNestedArray("networks");
-  
-  for (int i = 0; i < numNetworks; i++) {
-    JsonObject network = networks.createNestedObject();
-    network["ssid"] = WiFi.SSID(i);
-    network["rssi"] = WiFi.RSSI(i);
-    network["secure"] = WiFi.encryptionType(i) != WIFI_AUTH_OPEN;
-    network["channel"] = WiFi.channel(i);
-  }
-  
-  String response;
-  serializeJson(doc, response);
-  server.send(200, "application/json", response);
-  
-  WiFi.scanDelete();
-}
-
-void handleConnect() {
-  if (!server.hasArg("plain")) {
-    server.send(400, "application/json", "{\\\"status\\\":\\\"error\\\",\\\"message\\\":\\\"Missing request body\\\"}");
-    return;
-  }
-  
-  String body = server.arg("plain");
-  DynamicJsonDocument doc(512);
-  DeserializationError error = deserializeJson(doc, body);
-  
-  if (error) {
-    server.send(400, "application/json", "{\\\"status\\\":\\\"error\\\",\\\"message\\\":\\\"Invalid JSON\\\"}");
-    return;
-  }
-  
-  if (doc.containsKey("disconnect") && doc["disconnect"].as<bool>()) {
-    WiFi.disconnect();
-    strcpy(config.ssid, "");
-    strcpy(config.password, "");
-    saveConfig();
-    server.send(200, "application/json", "{\\\"status\\\":\\\"disconnected\\\"}");
-    return;
-  }
-  
-  if (!doc.containsKey("ssid")) {
-    server.send(400, "application/json", "{\\\"status\\\":\\\"error\\\",\\\"message\\\":\\\"Missing SSID\\\"}");
-    return;
-  }
-  
-  String ssid = doc["ssid"].as<String>();
-  String password = doc.containsKey("password") ? doc["password"].as<String>() : "";
-  
-  // Save to config
-  ssid.toCharArray(config.ssid, 32);
-  password.toCharArray(config.password, 64);
-  saveConfig();
-  
-  // Connect to WiFi
-  WiFi.begin(ssid.c_str(), password.c_str());
-  
-  int attempts = 0;
-  while (WiFi.status() != WL_CONNECTED && attempts < 20) {
-    delay(500);
-    attempts++;
-  }
-  
-  if (WiFi.status() == WL_CONNECTED) {
-    deviceIpAddress = WiFi.localIP().toString();
-    accessPointMode = false;
-    server.send(200, "application/json", "{\\\"status\\\":\\\"connected\\\",\\\"ip\\\":\\\"" + deviceIpAddress + "\\\"}");
-  } else {
-    server.send(200, "application/json", "{\\\"status\\\":\\\"failed\\\"}");
-  }
-}
-
-void handleUpdate(HTTPUpload& upload) {
-  if (upload.status == UPLOAD_FILE_START) {
-    Serial.printf("Update: %s\\n", upload.filename.c_str());
-    if (!Update.begin(UPDATE_SIZE_UNKNOWN)) {
-      Update.printError(Serial);
-    }
-  } else if (upload.status == UPLOAD_FILE_WRITE) {
-    if (Update.write(upload.buf, upload.currentSize) != upload.currentSize) {
-      Update.printError(Serial);
-    }
-  } else if (upload.status == UPLOAD_FILE_END) {
-    if (Update.end(true)) {
-      Serial.printf("Update Success: %u bytes\\nRebooting...\\n", upload.totalSize);
-    } else {
-      Update.printError(Serial);
-    }
-  }
-}
-
-void handleStatus() {
-  DynamicJsonDocument doc(256);
-  doc["uptime"] = uptime;
-  doc["temperature"] = cpuTemperature;
-  doc["connected"] = WiFi.status() == WL_CONNECTED;
-  doc["accessPoint"] = accessPointMode;
-  doc["ip"] = deviceIpAddress;
-  doc["mac"] = deviceMacAddress;
-  
-  if (WiFi.status() == WL_CONNECTED) {
-    doc["ssid"] = WiFi.SSID();
-    doc["rssi"] = WiFi.RSSI();
-  }
-  
-  String response;
-  serializeJson(doc, response);
-  server.send(200, "application/json", response);
-}
-
-void handleTheme() {
-  String theme;
-  
-  if (portalTheme == "light") {
-    theme = "* { box-sizing: border-box; margin: 0; padding: 0; }";
-    theme += "body { font-family: Arial, sans-serif; background-color: #f1f5f9; color: #0f172a; line-height: 1.6; }";
-    theme += ".container { max-width: 600px; margin: 0 auto; padding: 20px; }";
-    theme += "h1, h2 { margin-bottom: 20px; color: #0f172a; }";
-    theme += "h1 { text-align: center; }";
-    theme += ".card { background: #fff; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }";
-    // ... add more light theme CSS
-  } 
-  else if (portalTheme == "teal") {
-    theme = "* { box-sizing: border-box; margin: 0; padding: 0; }";
-    theme += "body { font-family: Arial, sans-serif; background-color: #0d1b2a; color: #e0e0e0; line-height: 1.6; }";
-    theme += ".container { max-width: 600px; margin: 0 auto; padding: 20px; }";
-    theme += "h1, h2 { margin-bottom: 20px; color: #0d9488; }"; 
-    theme += "h1 { text-align: center; }";
-    theme += ".card { background: #1e2a3a; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }";
-    // ... add more teal theme CSS
-  }
-  else {  // dark theme
-    theme = "* { box-sizing: border-box; margin: 0; padding: 0; }";
-    theme += "body { font-family: Arial, sans-serif; background-color: #0f172a; color: #e0e0e0; line-height: 1.6; }";
-    theme += ".container { max-width: 600px; margin: 0 auto; padding: 20px; }";
-    theme += "h1, h2 { margin-bottom: 20px; color: #60a5fa; }";
-    theme += "h1 { text-align: center; }";
-    theme += ".card { background: #1e293b; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }";
-    // ... add more dark theme CSS
-  }
-  
-  // Common styles
-  theme += ".form-group { margin-bottom: 15px; }";
-  theme += "label { display: block; margin-bottom: 5px; font-weight: bold; }";
-  theme += "input[type='text'], input[type='password'] { width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #333; background-color: rgba(255,255,255,0.1); color: inherit; }";
-  theme += ".button { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: all 0.3s; }";
-  theme += ".primary { background-color: #3b82f6; color: white; }";
-  theme += ".primary:hover { background-color: #2563eb; }";
-  theme += ".secondary { background-color: #6b7280; color: white; }";
-  theme += ".secondary:hover { background-color: #4b5563; }";
-  theme += ".danger { background-color: #ef4444; color: white; }";
-  theme += ".danger:hover { background-color: #dc2626; }";
-  
-  server.send(200, "text/css", theme);
-}
-
-bool loadConfig() {
-  if (!SPIFFS.exists(CONFIG_FILE)) {
-    return false;
-  }
-  
-  File configFile = SPIFFS.open(CONFIG_FILE, "r");
-  if (!configFile) {
-    return false;
-  }
-  
-  size_t size = configFile.size();
-  if (size > 1024) {
-    configFile.close();
-    return false;
-  }
-  
-  std::unique_ptr<char[]> buf(new char[size]);
-  configFile.readBytes(buf.get(), size);
-  configFile.close();
-  
-  DynamicJsonDocument doc(1024);
-  DeserializationError error = deserializeJson(doc, buf.get());
-  if (error) {
-    return false;
-  }
-  
-  strlcpy(config.ssid, doc["ssid"] | "", sizeof(config.ssid));
-  strlcpy(config.password, doc["password"] | "", sizeof(config.password));
-  config.enableCaptivePortal = doc["enableCaptivePortal"] | true;
-  strlcpy(config.portalName, doc["portalName"] | "Embediverse Portal", sizeof(config.portalName));
-  strlcpy(config.portalTheme, doc["portalTheme"] | "dark", sizeof(config.portalTheme));
-  
-  return true;
-}
-
-void saveConfig() {
-  DynamicJsonDocument doc(1024);
-  
-  doc["ssid"] = config.ssid;
-  doc["password"] = config.password;
-  doc["enableCaptivePortal"] = config.enableCaptivePortal;
-  doc["portalName"] = config.portalName;
-  doc["portalTheme"] = config.portalTheme;
-  
-  File configFile = SPIFFS.open(CONFIG_FILE, "w");
-  if (!configFile) {
-    Serial.println("Failed to open config file for writing");
-    return;
-  }
-  
-  serializeJson(doc, configFile);
-  configFile.close();
-}
-
-String getMAC() {
-  uint8_t mac[6];
-  WiFi.macAddress(mac);
-  char macStr[18] = { 0 };
-  sprintf(macStr, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-  return String(macStr);
-}
-
-float getCpuTemperature() {
-  // ESP32 has a built-in temperature sensor
-  #ifdef ESP32
-    return temperatureRead();
-  #else
-    return 0;  // Not available on non-ESP32 boards
-  #endif
-}
-
-void startCaptivePortal() {
-  String apName = "Embediverse-" + String(ESP.getChipId(), HEX);
-  
-  Serial.println("Starting access point: " + apName);
-  WiFi.mode(WIFI_AP);
-  WiFi.softAP(apName.c_str(), AP_PASSWORD);
-  
-  Serial.print("AP IP address: ");
-  deviceIpAddress = WiFi.softAPIP().toString();
-  Serial.println(deviceIpAddress);
-  
-  // Start DNS server for captive portal if enabled
-  if (captivePortalEnabled) {
-    dnsServer.start(DNS_PORT, "*", WiFi.softAPIP());
-    Serial.println("DNS server started");
-  }
-  
-  accessPointMode = true;
-}
 `;
 
+// Setup guide for WiFi manager
 export const wifiManagerSetupGuide = `
 # ESP32 WiFi Manager Setup Guide
 
