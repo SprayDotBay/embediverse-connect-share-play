@@ -142,3 +142,29 @@
 ::-webkit-scrollbar-thumb {
   @apply bg-accent/50 rounded-full hover:bg-accent/70 transition-colors;
 }
+
+/* Monaco editor enhancement */
+.monaco-editor .cursor {
+  @apply animate-cursor-blink;
+}
+
+/* Syntax highlighting for code blocks */
+.syntax-cpp-keyword {
+  @apply text-syntax-keyword;
+}
+
+.syntax-cpp-string {
+  @apply text-syntax-string;
+}
+
+.syntax-cpp-comment {
+  @apply text-syntax-comment;
+}
+
+.syntax-cpp-function {
+  @apply text-syntax-function;
+}
+
+.syntax-cpp-number {
+  @apply text-syntax-number;
+}
