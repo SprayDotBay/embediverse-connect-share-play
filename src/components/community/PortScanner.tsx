@@ -1,15 +1,17 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { RefreshCw, Wifi, WifiOff } from "lucide-react";
+import { RefreshCw, Wifi, WifiOff, CircleAlert } from "lucide-react";
 
 interface PortScannerProps {
   isScanning: boolean;
   scanPorts: () => void;
   availablePorts: string[];
+  selectedPort: string;
+  setSelectedPort: (port: string) => void;
   isConnected: boolean;
   connect: () => void;
   disconnect: () => void;
@@ -21,6 +23,8 @@ export const PortScanner: React.FC<PortScannerProps> = ({
   isScanning,
   scanPorts,
   availablePorts,
+  selectedPort,
+  setSelectedPort,
   isConnected,
   connect,
   disconnect,
@@ -44,7 +48,7 @@ export const PortScanner: React.FC<PortScannerProps> = ({
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
             <div className="md:col-span-2 space-y-2">
               <Label htmlFor="port-select">Select Port</Label>
-              <Select>
+              <Select value={selectedPort} onValueChange={setSelectedPort}>
                 <SelectTrigger id="port-select" disabled={isConnected || isScanning || availablePorts.length === 0}>
                   <SelectValue placeholder="Select a port" />
                 </SelectTrigger>
@@ -91,7 +95,7 @@ export const PortScanner: React.FC<PortScannerProps> = ({
                 <Button
                   className="w-full"
                   onClick={connect}
-                  disabled={isLoading || availablePorts.length === 0}
+                  disabled={isLoading || !selectedPort}
                 >
                   {isLoading ? (
                     <>
@@ -113,7 +117,8 @@ export const PortScanner: React.FC<PortScannerProps> = ({
               </p>
             )}
             {connectionStatus === "failed" && (
-              <p className="text-red-500">
+              <p className="text-red-500 flex items-center gap-1">
+                <CircleAlert className="h-4 w-4" />
                 Connection failed. Please check your device and try again.
               </p>
             )}
@@ -122,7 +127,7 @@ export const PortScanner: React.FC<PortScannerProps> = ({
                 No ports detected. Click "Scan Ports" to search for available devices.
               </p>
             )}
-            {!isConnected && availablePorts.length > 0 && (
+            {!isConnected && availablePorts.length > 0 && !selectedPort && (
               <p className="text-muted-foreground">
                 {availablePorts.length} ports found. Select a port and click "Connect".
               </p>

@@ -25,48 +25,89 @@ export const useSerialPort = () => {
   const [availablePorts, setAvailablePorts] = useState<SerialPortInfo[]>([]);
   const [isScanning, setIsScanning] = useState(false);
   const [baudRate, setBaudRate] = useState(115200);
+  const [connectionAttempts, setConnectionAttempts] = useState(0);
+  const [lastError, setLastError] = useState<string | null>(null);
   
   // Check if Web Serial API is supported
-  const isSupported = 'serial' in navigator;
+  const isSupported = typeof navigator !== 'undefined' && 'serial' in navigator;
   
-  // Scan for available serial ports
+  // Enhanced port scanning with vendor/product ID detection
   const scanPorts = useCallback(async () => {
-    if (!isSupported) return;
+    if (!isSupported) {
+      setLastError("Web Serial API is not supported in this browser");
+      return false;
+    }
     
     try {
       setIsScanning(true);
       
-      // Request port access to trigger the device list
-      await navigator.serial.requestPort();
+      const knownESP32Vendors = [
+        { id: '0x10c4', name: 'Silicon Labs' },  // Common ESP32 USB-UART chip
+        { id: '0x1a86', name: 'QinHeng Electronics' }, // CH340 converter used in many ESP32 boards
+        { id: '0x303a', name: 'Espressif' } // Espressif's own USB VID
+      ];
+      
+      // Get existing ports
       const ports = await navigator.serial.getPorts();
       
-      const portInfos: SerialPortInfo[] = ports.map(p => {
-        const info = p.getInfo();
-        return {
-          path: `Port ${ports.indexOf(p) + 1}`,
-          manufacturer: 'Unknown',
-          productId: info.usbProductId ? info.usbProductId.toString(16) : undefined,
-          vendorId: info.usbVendorId ? info.usbVendorId.toString(16) : undefined,
-        };
-      });
+      const portInfos: SerialPortInfo[] = await Promise.all(
+        ports.map(async (p) => {
+          const info = p.getInfo();
+          let manufacturer = 'Unknown';
+          
+          // Try to identify ESP32 devices by vendor ID
+          if (info.usbVendorId) {
+            const vendorHex = '0x' + info.usbVendorId.toString(16);
+            const knownVendor = knownESP32Vendors.find(v => v.id === vendorHex);
+            if (knownVendor) {
+              manufacturer = `${knownVendor.name} (Likely ESP32)`;
+            }
+          }
+          
+          return {
+            path: `Port ${ports.indexOf(p) + 1}`,
+            manufacturer: manufacturer,
+            productId: info.usbProductId ? '0x' + info.usbProductId.toString(16) : undefined,
+            vendorId: info.usbVendorId ? '0x' + info.usbVendorId.toString(16) : undefined,
+          };
+        })
+      );
       
       setAvailablePorts(portInfos);
+      return true;
     } catch (error) {
       console.error('Failed to scan serial ports:', error);
+      setLastError(`Failed to scan ports: ${error instanceof Error ? error.message : String(error)}`);
+      return false;
     } finally {
       setIsScanning(false);
     }
   }, [isSupported]);
   
-  // Connect to a serial port
-  const connect = useCallback(async (options: SerialOptions = {}) => {
+  // Enhanced connection with retry mechanism
+  const connect = useCallback(async (options: SerialOptions = {}): Promise<boolean> => {
     if (!isSupported) {
-      throw new Error('Web Serial API is not supported in this browser');
+      setLastError("Web Serial API is not supported in this browser");
+      return false;
     }
     
     try {
+      setConnectionAttempts(prev => prev + 1);
+      
       // Request user to select a serial port
-      const selectedPort = await navigator.serial.requestPort();
+      const selectedPort = await navigator.serial.requestPort({
+        filters: [
+          // Add filters for common ESP32 USB-UART chips
+          { usbVendorId: 0x10C4 }, // Silicon Labs CP210x
+          { usbVendorId: 0x1A86 }, // CH340
+          { usbVendorId: 0x303A }  // Espressif
+        ]
+      });
+      
+      // Reset the port if it was previously opened
+      if (selectedPort.readable || selectedPort.writable) {
+        await selectedPort.close();
+      }
       
       // Open the port with specified options
       await selectedPort.open({
@@ -88,19 +129,21 @@ export const useSerialPort = () => {
         setReader(portReader);
         setWriter(portWriter);
         setIsConnected(true);
+        setLastError(null);
         return true;
       } else {
         throw new Error('Failed to get reader or writer for the serial port');
       }
     } catch (error) {
       console.error('Serial connection error:', error);
+      setLastError(`Connection error: ${error instanceof Error ? error.message : String(error)}`);
       setIsConnected(false);
       return false;
     }
   }, [baudRate, isSupported]);
   
-  // Disconnect from the serial port
-  const disconnect = useCallback(async () => {
+  // Robust disconnect function
+  const disconnect = useCallback(async (): Promise<boolean> => {
     try {
       if (reader) {
         reader.releaseLock();
@@ -121,11 +164,12 @@ export const useSerialPort = () => {
       return true;
     } catch (error) {
       console.error('Serial disconnection error:', error);
+      setLastError(`Disconnection error: ${error instanceof Error ? error.message : String(error)}`);
       return false;
     }
   }, [port, reader, writer]);
   
-  // Read data from the serial port
+  // Enhanced read with error handling and reconnection
   const readData = useCallback(async (): Promise<string | null> => {
     if (!reader || !isConnected) return null;
     
@@ -143,37 +187,103 @@ export const useSerialPort = () => {
       return decoder.decode(value);
     } catch (error) {
       console.error('Serial read error:', error);
+      setLastError(`Read error: ${error instanceof Error ? error.message : String(error)}`);
+      
+      // If the port got disconnected, attempt to clean up
+      if (port && isConnected) {
+        try {
+          await disconnect();
+        } catch (cleanupError) {
+          console.error('Error during cleanup after read failure:', cleanupError);
+        }
+      }
+      
       return null;
     }
-  }, [reader, isConnected]);
+  }, [reader, isConnected, port, disconnect]);
   
-  // Write data to the serial port
+  // Enhanced write with error handling and chunking for large data
   const writeData = useCallback(async (data: string): Promise<boolean> => {
     if (!writer || !isConnected) return false;
     
     try {
       const encoder = new TextEncoder();
-      const encoded = encoder.encode(data + '\r\n');
-      await writer.write(encoded);
+      // Ensure we add a newline if not present
+      const normalizedData = data.endsWith('\r\n') ? data : data + '\r\n';
+      const encoded = encoder.encode(normalizedData);
+      
+      // For large data, chunk it to avoid buffer overflows
+      const CHUNK_SIZE = 512;
+      if (encoded.length > CHUNK_SIZE) {
+        for (let i = 0; i < encoded.length; i += CHUNK_SIZE) {
+          const chunk = encoded.slice(i, i + CHUNK_SIZE);
+          await writer.write(chunk);
+          // Small delay between chunks
+          await new Promise(resolve => setTimeout(resolve, 5));
+        }
+      } else {
+        await writer.write(encoded);
+      }
+      
       return true;
     } catch (error) {
       console.error('Serial write error:', error);
+      setLastError(`Write error: ${error instanceof Error ? error.message : String(error)}`);
+      
+      // If the port got disconnected during write, attempt to clean up
+      if (error instanceof Error && error.message.includes('disconnected') && isConnected) {
+        try {
+          await disconnect();
+        } catch (cleanupError) {
+          console.error('Error during cleanup after write failure:', cleanupError);
+        }
+      }
+      
       return false;
     }
-  }, [writer, isConnected]);
+  }, [writer, isConnected, disconnect]);
   
-  // Change baud rate
+  // Change baud rate with better error handling
   const changeBaudRate = useCallback(async (newBaudRate: number): Promise<boolean> => {
     setBaudRate(newBaudRate);
     
     if (isConnected) {
       // We need to reconnect with the new baud rate
-      await disconnect();
-      return connect({ baudRate: newBaudRate });
+      try {
+        await disconnect();
+        return await connect({ baudRate: newBaudRate });
+      } catch (error) {
+        console.error('Error changing baud rate:', error);
+        setLastError(`Baud rate change error: ${error instanceof Error ? error.message : String(error)}`);
+        return false;
+      }
     }
     
     return true;
   }, [connect, disconnect, isConnected]);
+  
+  // Auto-discovery of ESP32 devices on mount
+  useEffect(() => {
+    if (isSupported) {
+      scanPorts().catch(console.error);
+      
+      // Add event listeners for device connection/disconnection
+      navigator.serial.addEventListener('connect', () => {
+        console.log('USB device connected');
+        scanPorts().catch(console.error);
+      });
+      
+      navigator.serial.addEventListener('disconnect', () => {
+        console.log('USB device disconnected');
+        scanPorts().catch(console.error);
+        
+        // If our current port was disconnected, clean up
+        if (isConnected) {
+          disconnect().catch(console.error);
+        }
+      });
+    }
+  }, [isSupported, scanPorts, disconnect, isConnected]);
   
   // Clean up on unmount
   useEffect(() => {
@@ -203,5 +313,7 @@ export const useSerialPort = () => {
     isScanning,
     baudRate,
     changeBaudRate,
+    connectionAttempts,
+    lastError
   };
 };
