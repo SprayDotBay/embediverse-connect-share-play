@@ -35,6 +35,7 @@ export const EspSettings: React.FC = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState("");
   const [availablePorts, setAvailablePorts] = useState<string[]>([]);
+  const [selectedPort, setSelectedPort] = useState(""); // Added missing property
   const [isScanning, setIsScanning] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [deviceIp, setDeviceIp] = useState("");
@@ -230,6 +231,8 @@ export const EspSettings: React.FC = () => {
         isScanning={isScanning}
         scanPorts={scanPorts}
         availablePorts={availablePorts}
+        selectedPort={selectedPort}
+        setSelectedPort={setSelectedPort}
         isConnected={isConnected}
         connect={handleConnect}
         disconnect={handleDisconnect}

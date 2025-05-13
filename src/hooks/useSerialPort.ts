@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 
 interface SerialOptions {
@@ -267,23 +266,17 @@ export const useSerialPort = () => {
     if (isSupported) {
       scanPorts().catch(console.error);
       
-      // Add event listeners for device connection/disconnection
-      navigator.serial.addEventListener('connect', () => {
-        console.log('USB device connected');
+      // Fix for addEventListener not existing on NavigatorSerial
+      // Use a manual refresh approach instead of event listeners
+      const checkForDeviceChanges = setInterval(() => {
         scanPorts().catch(console.error);
-      });
+      }, 5000);
       
-      navigator.serial.addEventListener('disconnect', () => {
-        console.log('USB device disconnected');
-        scanPorts().catch(console.error);
-        
-        // If our current port was disconnected, clean up
-        if (isConnected) {
-          disconnect().catch(console.error);
-        }
-      });
+      return () => {
+        clearInterval(checkForDeviceChanges);
+      };
     }
-  }, [isSupported, scanPorts, disconnect, isConnected]);
+  }, [isSupported, scanPorts]);
   
   // Clean up on unmount
   useEffect(() => {

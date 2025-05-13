@@ -70,6 +70,15 @@ export default {
 				'green-success': '#10b981',
 				'orange-warning': '#f59e0b',
 				'red-error': '#ef4444',
+				// New orangey developer-friendly colors
+				'orange-deep': '#7D3C03',
+				'orange-medium': '#F97316',
+				'orange-light': '#FFEDD5',
+				'syntax-keyword': '#F97316', // Orange for keywords
+				'syntax-string': '#84CC16', // Green for strings
+				'syntax-comment': '#78716C', // Gray for comments
+				'syntax-function': '#38BDF8', // Blue for functions
+				'syntax-number': '#FB7185', // Pink for numbers
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -104,6 +113,10 @@ export default {
 				'spin-slow': {
 					'0%': { transform: 'rotate(0deg)' },
 					'100%': { transform: 'rotate(360deg)' },
+				},
+				'cursor-blink': {
+					'0%, 100%': { opacity: '1' },
+					'50%': { opacity: '0' },
 				}
 			},
 			animation: {
@@ -112,14 +125,25 @@ export default {
 				'pulse-gentle': 'pulse-gentle 2s ease-in-out infinite',
 				'float': 'float 3s ease-in-out infinite',
 				'spin-slow': 'spin-slow 8s linear infinite',
+				'cursor-blink': 'cursor-blink 1s step-end infinite',
 			},
 			fontFamily: {
 				sans: ['Inter', 'sans-serif'],
-				mono: ['Fira Code', 'monospace'],
+				mono: ['Fira Code', 'JetBrains Mono', 'monospace'],
 			},
 			backgroundImage: {
 				'circuit-pattern': "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")",
-			}
+				'dark-circuit-pattern': "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23F97316' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")",
+			},
+			typography: {
+				DEFAULT: {
+					css: {
+						code: {
+							color: 'hsl(var(--accent))',
+						},
+					},
+				},
+			},
 		}
 	},
 	plugins: [require("tailwindcss-animate")],

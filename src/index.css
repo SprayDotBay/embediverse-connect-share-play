@@ -23,7 +23,7 @@
     --muted: 210 40% 96%;
     --muted-foreground: 215 16% 47%;
 
-    --accent: 220 80% 56%;
+    --accent: 24 90% 50%;  /* Orangey accent */
     --accent-foreground: 210 40% 98%;
 
     --destructive: 0 84% 60%;
@@ -31,7 +31,7 @@
 
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 221 83% 53%;
+    --ring: 24 90% 50%;  /* Orangey ring */
 
     --radius: 0.5rem;
 
@@ -39,10 +39,10 @@
     --sidebar-foreground: 222 47% 11%;
     --sidebar-primary: 222 47% 11%;
     --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 216 34% 94%;
+    --sidebar-accent: 24 90% 97%;  /* Light orangey sidebar accent */
     --sidebar-accent-foreground: 222 47% 11%;
     --sidebar-border: 214 32% 91%;
-    --sidebar-ring: 221 83% 53%;
+    --sidebar-ring: 24 90% 50%;  /* Orangey sidebar ring */
   }
 
   .dark {
@@ -64,7 +64,7 @@
     --muted: 217 33% 18%;
     --muted-foreground: 215 20% 65%;
 
-    --accent: 217 91% 60%;
+    --accent: 24 90% 50%;  /* Orangey accent */
     --accent-foreground: 210 40% 98%;
 
     --destructive: 0 63% 31%;
@@ -72,16 +72,17 @@
 
     --border: 217 33% 18%;
     --input: 217 33% 18%;
-    --ring: 224 76% 48%;
+    --ring: 24 70% 50%;  /* Orangey ring */
 
-    --sidebar-background: 222 47% 11%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 217 91% 60%;
+    /* Developer-friendly dark mode with orangey tones */
+    --sidebar-background: 25 20% 12%;  /* Dark orangey background */
+    --sidebar-foreground: 24 20% 95%;
+    --sidebar-primary: 24 90% 55%;  /* Orangey primary */
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 217 33% 18%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217 33% 18%;
-    --sidebar-ring: 224 76% 48%;
+    --sidebar-accent: 25 30% 20%;  /* Dark orangey accent */
+    --sidebar-accent-foreground: 24 20% 95%;
+    --sidebar-border: 25 20% 20%;
+    --sidebar-ring: 24 70% 50%;  /* Orangey ring */
   }
 }
 
@@ -100,4 +101,44 @@
   .circuit-pattern {
     @apply bg-circuit-pattern;
   }
+  
+  /* Developer-focused utility classes */
+  .code-block {
+    @apply font-mono text-sm bg-muted p-4 rounded-md overflow-x-auto;
+  }
+  
+  .syntax-highlight {
+    @apply bg-accent/10 text-accent px-1 rounded;
+  }
+  
+  .command-line {
+    @apply font-mono text-sm bg-sidebar-background text-sidebar-foreground p-3 rounded-md border border-sidebar-border;
+  }
+}
+
+/* Code editor specific styles */
+.code-editor-container {
+  @apply bg-sidebar-background border border-sidebar-border rounded-lg overflow-hidden;
+}
+
+.code-editor-line-numbers {
+  @apply bg-sidebar-accent text-sidebar-accent-foreground px-2 py-4 text-right font-mono text-xs select-none;
+}
+
+.code-editor-content {
+  @apply p-4 font-mono text-sm;
+}
+
+/* Developer-friendly scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-muted rounded-full;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-accent/50 rounded-full hover:bg-accent/70 transition-colors;
 }
