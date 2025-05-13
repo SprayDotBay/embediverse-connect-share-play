@@ -1,9 +1,13 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { getLanguageFromFile } from "@/utils/codeTemplates";
 import { toast } from "@/hooks/use-toast";
 
-export const useCodeEditorState = (activeFile: string) => {
+interface UseCodeEditorProps {
+  activeFile: string;
+}
+
+export const useCodeEditorState = ({ activeFile }: UseCodeEditorProps) => {
   const [activeTab, setActiveTab] = useState("code");
   const [activeDeviceTab, setActiveDeviceTab] = useState("serial");
   
@@ -197,31 +201,43 @@ void GPIOViewer::update() {
   });
   
   // Handle code changes
-  const handleCodeChange = (value: string | undefined) => {
+  const handleCodeChange = useCallback((value: string | undefined) => {
     if (value !== undefined) {
       setFileContents(prev => ({
         ...prev,
         [activeFile]: value
       }));
     }
-  };
+  }, [activeFile]);
   
+  return {
+    fileContents,
+    setFileContents,
+    activeTab,
+    setActiveTab,
+    activeDeviceTab,
+    setActiveDeviceTab,
+    handleCodeChange
+  };
+};
+
+export const useCodeEditorActions = () => {
   // Editor actions
-  const handleVerify = () => {
+  const handleVerify = useCallback(() => {
     toast({
       title: "Code Verification",
       description: "Code verified successfully. No errors found.",
     });
-  };
+  }, []);
   
-  const handleFormat = () => {
+  const handleFormat = useCallback(() => {
     toast({
       title: "Code Formatting",
       description: "Code formatted successfully.",
     });
-  };
+  }, []);
   
-  const handleUpload = (isConnected: boolean) => {
+  const handleUpload = useCallback((isConnected: boolean) => {
     if (isConnected) {
       toast({
         title: "Upload Started",
@@ -241,32 +257,19 @@ void GPIOViewer::update() {
         variant: "destructive"
       });
     }
-  };
+  }, []);
   
-  const handleSave = () => {
+  const handleSave = useCallback(() => {
     toast({
       title: "File Saved",
-      description: `${activeFile.split('/').pop() || ''} saved successfully.`,
+      description: `File saved successfully.`,
     });
-  };
+  }, []);
   
-  // Get the current active file language for the editor
-  const getEditorLanguage = () => {
-    return getLanguageFromFile(activeFile);
-  };
-
   return {
-    fileContents,
-    setFileContents,
-    activeTab,
-    setActiveTab,
-    activeDeviceTab,
-    setActiveDeviceTab,
-    handleCodeChange,
     handleVerify,
     handleFormat,
     handleUpload,
-    handleSave,
-    getEditorLanguage
+    handleSave
   };
 };
