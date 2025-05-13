@@ -112,13 +112,13 @@
   }
   
   .command-line {
-    @apply font-mono text-sm bg-sidebar-background text-sidebar-foreground p-3 rounded-md border border-sidebar-border;
+    @apply font-mono text-sm bg-sidebar p-3 rounded-md border border-sidebar-border;
   }
 }
 
 /* Code editor specific styles */
 .code-editor-container {
-  @apply bg-sidebar-background border border-sidebar-border rounded-lg overflow-hidden;
+  @apply bg-sidebar border border-sidebar-border rounded-lg overflow-hidden;
 }
 
 .code-editor-line-numbers {
