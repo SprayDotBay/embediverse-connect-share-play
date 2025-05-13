@@ -63,6 +63,7 @@ export const openFileDialog = (accept: string, callback: (files: FileList) => vo
 export const openDirectoryDialog = (callback: (files: FileList) => void) => {
   const input = document.createElement('input');
   input.type = 'file';
+  // @ts-ignore - webkitdirectory is not in the standard HTML input properties
   input.webkitdirectory = true;
   input.style.display = 'none';
   input.onchange = (e) => {

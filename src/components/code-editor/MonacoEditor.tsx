@@ -1,7 +1,7 @@
 
 import React, { useRef, useEffect } from "react";
 import Editor, { Monaco, OnMount } from "@monaco-editor/react";
-import { editor } from "monaco-editor";
+import type { editor } from "monaco-editor";
 
 interface MonacoEditorProps {
   code: string;
@@ -46,7 +46,15 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
     
     // Add Arduino code snippets
     monaco.languages.registerCompletionItemProvider('cpp', {
-      provideCompletionItems: () => {
+      provideCompletionItems: (model, position) => {
+        const word = model.getWordUntilPosition(position);
+        const range = {
+          startLineNumber: position.lineNumber,
+          endLineNumber: position.lineNumber,
+          startColumn: word.startColumn,
+          endColumn: word.endColumn
+        };
+        
         return {
           suggestions: [
             {
@@ -54,49 +62,56 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
               kind: monaco.languages.CompletionItemKind.Snippet,
               insertText: 'void setup() {\n\t${1}\n}',
               insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-              documentation: 'Arduino setup function'
+              documentation: 'Arduino setup function',
+              range: range
             },
             {
               label: 'loop',
               kind: monaco.languages.CompletionItemKind.Snippet,
               insertText: 'void loop() {\n\t${1}\n}',
               insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-              documentation: 'Arduino loop function'
+              documentation: 'Arduino loop function',
+              range: range
             },
             {
               label: 'digitalWrite',
               kind: monaco.languages.CompletionItemKind.Function,
               insertText: 'digitalWrite(${1:pin}, ${2:value});',
               insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-              documentation: 'Set a digital pin to HIGH or LOW'
+              documentation: 'Set a digital pin to HIGH or LOW',
+              range: range
             },
             {
               label: 'digitalRead',
               kind: monaco.languages.CompletionItemKind.Function,
               insertText: 'digitalRead(${1:pin});',
               insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-              documentation: 'Read a digital pin value'
+              documentation: 'Read a digital pin value',
+              range: range
             },
             {
               label: 'analogRead',
               kind: monaco.languages.CompletionItemKind.Function,
               insertText: 'analogRead(${1:pin});',
               insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-              documentation: 'Read an analog pin value'
+              documentation: 'Read an analog pin value',
+              range: range
             },
             {
               label: 'analogWrite',
               kind: monaco.languages.CompletionItemKind.Function,
               insertText: 'analogWrite(${1:pin}, ${2:value});',
               insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-              documentation: 'Write an analog value to a pin'
+              documentation: 'Write an analog value to a pin',
+              range: range
             },
             {
               label: 'delay',
               kind: monaco.languages.CompletionItemKind.Function,
               insertText: 'delay(${1:ms});',
               insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-              documentation: 'Delay execution for a number of milliseconds'
+              documentation: 'Delay execution for a number of milliseconds',
+              range: range
             }
           ]
         };
@@ -110,7 +125,8 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
       const model = editorRef.current.getModel();
       if (model) {
         // To ensure proper language is set when switching files
-        monaco.editor.setModelLanguage(model, language);
+        editorRef.current.getModel()?.getLanguageId() !== language && 
+          monaco.editor.setModelLanguage(model, language);
       }
     }
   }, [language]);
