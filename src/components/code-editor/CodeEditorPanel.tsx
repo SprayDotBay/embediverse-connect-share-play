@@ -6,7 +6,7 @@ import { useCodeEditor } from "@/contexts/CodeEditorContext";
 import { downloadFile } from "@/utils/fileOperations";
 import { toast } from "@/hooks/use-toast";
 import { GitHubImportDialog } from "@/components/code-editor/GitHubImportDialog";
-import { FileItem } from "@/hooks/code-editor/useFileExplorer";
+import { FileItem } from "@/types/fileExplorer";
 import { EditorTabs } from "@/components/code-editor/EditorTabs";
 import { useImportActions } from "@/components/code-editor/ImportActions";
 
@@ -24,12 +24,13 @@ export const CodeEditorPanel: React.FC = () => {
     getEditorLanguage,
     setFileContents,
     setFiles,
-    files
+    files,
+    processImportedFile
   } = useCodeEditor();
   
   const [githubDialogOpen, setGithubDialogOpen] = useState(false);
   
-  const { handleImport } = useImportActions({ setFileContents, setFiles, files });
+  const { handleImport } = useImportActions({ processImportedFile });
   
   // Handle downloading the current file
   const handleDownload = () => {

@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, ReactNode, useEffect } from 'react';
-import { FileItem } from "@/hooks/code-editor/useFileExplorer";
+import { FileItem } from "@/types/fileExplorer";
 import { SerialMessage } from "@/hooks/code-editor/useSerialMonitor";
 import { useFileOperations } from "@/hooks/code-editor/useFileOperations";
 import { useSerialMonitor } from "@/hooks/code-editor/useSerialMonitor";
@@ -8,6 +8,7 @@ import { useBleManager } from "@/hooks/code-editor/useBleManager";
 import { useGpioControl } from "@/hooks/code-editor/useGpioControl";
 import { useProjectTemplates } from "@/hooks/code-editor/useProjectTemplates";
 
+// Make sure our context type includes the new file explorer operations
 interface CodeEditorContextType {
   // File explorer and editor state
   files: FileItem[];
@@ -34,9 +35,19 @@ interface CodeEditorContextType {
   // GPIO pins state
   gpioPinsHooks: ReturnType<typeof import("@/hooks/useGpioPins").useGpioPins>;
   
-  // Editor actions
+  // Enhanced file operations
   handleFileSelect: (file: FileItem) => void;
   handleToggleFolder: (folder: FileItem) => void;
+  handleCreateFile: (parentPath: string, fileName: string) => string;
+  handleCreateFolder: (parentPath: string, folderName: string) => void;
+  handleRename: (file: FileItem, newName: string) => void;
+  handleDelete: (file: FileItem) => void;
+  findFileInTree: (fileTree: FileItem[], path: string) => FileItem | null;
+  getFileParentPath: (filePath: string) => string;
+  getFileName: (filePath: string) => string;
+  processImportedFile: (file: File) => Promise<string | null>;
+  
+  // Editor actions
   handleCodeChange: (value: string | undefined) => void;
   handleVerify: () => void;
   handleFormat: () => void;
