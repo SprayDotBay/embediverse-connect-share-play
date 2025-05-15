@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { FileItem } from '@/types/fileExplorer';
 import { toast } from "@/hooks/use-toast";
@@ -54,6 +53,7 @@ export const useFileExplorer = () => {
   ]);
 
   const [activeFile, setActiveFile] = useState<string>("src/sensor.h");
+  const [fileContents, setFileContents] = useState<Record<string, string>>({});
 
   // Handle file selection
   const handleFileSelect = useCallback((file: FileItem) => {
@@ -365,6 +365,8 @@ export const useFileExplorer = () => {
     setFiles,
     activeFile,
     setActiveFile,
+    fileContents,
+    setFileContents,
     handleFileSelect,
     handleToggleFolder,
     handleCreateFile,

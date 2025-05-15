@@ -1,7 +1,7 @@
 
 import { toast } from "@/hooks/use-toast";
 import { esp32Template } from "@/utils/codeTemplates";
-import { FileItem } from "./useFileExplorer";
+import { FileItem } from "@/types/fileExplorer";
 
 type UseProjectTemplatesProps = {
   setFileContents: React.Dispatch<React.SetStateAction<Record<string, string>>>;

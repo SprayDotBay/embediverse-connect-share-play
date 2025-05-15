@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { parseGitHubUrl, fetchGitHubContent, downloadGitHubFile } from "@/utils/fileOperations";
-import { FileItem } from "@/hooks/code-editor/useFileExplorer";
+import { FileItem } from "@/types/fileExplorer";
 
 interface GitHubImportDialogProps {
   open: boolean;
