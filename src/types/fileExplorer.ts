@@ -24,6 +24,9 @@ export interface FileOperationsContextValue {
   handleDelete: (file: FileItem) => void;
   handleCreateFile: (parentPath: string, fileName: string) => void;
   handleCreateFolder: (parentPath: string, folderName: string) => void;
+  handleDuplicateFile: (file: FileItem) => void;
+  handleSave: () => void;
+  processImportedFile: (file: File) => Promise<string | null>;
   
   // Utils
   findFileInTree: (fileTree: FileItem[], path: string) => FileItem | null;

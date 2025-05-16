@@ -1,10 +1,9 @@
+
 import React, { createContext, useContext } from 'react';
 import { FileOperationsContextValue } from '@/types/fileExplorer';
 import { useFileOperations } from "@/hooks/code-editor/useFileOperations";
 import { useCodeEditorState } from "@/hooks/code-editor/useCodeEditor";
 import { useProjectTemplates } from "@/hooks/code-editor/useProjectTemplates";
-import { useSerialMonitor } from "@/hooks/serial-monitor/useSerialMonitor";
-import { useBleManager } from "@/hooks/ble/useBleManager";
 
 // Create the context
 const CodeEditorContext = createContext<FileOperationsContextValue | undefined>(undefined);
@@ -24,21 +23,13 @@ export const CodeEditorProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const editorState = useCodeEditorState({
     activeFile: fileOps.activeFile
   });
-  const projectTemplates = useProjectTemplates({
-    setFiles: fileOps.setFiles,
-    setFileContents: fileOps.setFileContents,
-    setActiveFile: fileOps.setActiveFile
-  });
-  const serialMonitor = useSerialMonitor();
-  const bleManager = useBleManager();
+  const projectTemplates = useProjectTemplates();
 
   // Define the context value
   const contextValue: FileOperationsContextValue = {
     ...fileOps,
     ...editorState,
-    ...projectTemplates,
-    ...serialMonitor,
-    ...bleManager
+    ...projectTemplates
   };
 
   return (

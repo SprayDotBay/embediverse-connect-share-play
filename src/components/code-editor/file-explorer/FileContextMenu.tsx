@@ -8,7 +8,7 @@ import {
   ContextMenuTrigger
 } from "@/components/ui/context-menu";
 import { FileItem } from "@/types/fileExplorer";
-import { Pencil, Copy, Trash2, Download } from "lucide-react";
+import { Pencil, Copy, Trash2, Download, FileIcon } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { downloadFile } from "@/utils/fileOperations";
 
@@ -17,6 +17,7 @@ interface FileContextMenuProps {
   children: React.ReactNode;
   onRename: (file: FileItem) => void;
   onDelete: (file: FileItem) => void;
+  onDuplicate: (file: FileItem) => void;
   fileContents?: Record<string, string>;
 }
 
@@ -25,6 +26,7 @@ export const FileContextMenu: React.FC<FileContextMenuProps> = ({
   children,
   onRename,
   onDelete,
+  onDuplicate,
   fileContents = {}
 }) => {
   const isDirectory = item.type === "directory";
@@ -61,6 +63,10 @@ export const FileContextMenu: React.FC<FileContextMenuProps> = ({
   const handleDelete = () => {
     onDelete(item);
   };
+  
+  const handleDuplicate = () => {
+    onDuplicate(item);
+  };
 
   return (
     <ContextMenu>
@@ -72,15 +78,26 @@ export const FileContextMenu: React.FC<FileContextMenuProps> = ({
           <Pencil className="h-4 w-4" />
           <span>Rename</span>
         </ContextMenuItem>
+        
+        {!isDirectory && (
+          <ContextMenuItem onClick={handleDuplicate} className="flex items-center gap-2">
+            <Copy className="h-4 w-4" />
+            <span>Duplicate</span>
+          </ContextMenuItem>
+        )}
+        
         <ContextMenuItem onClick={handleDelete} className="flex items-center gap-2 text-destructive">
           <Trash2 className="h-4 w-4" />
           <span>Delete</span>
         </ContextMenuItem>
+        
         <ContextMenuSeparator />
+        
         <ContextMenuItem onClick={handleCopyPath} className="flex items-center gap-2">
           <Copy className="h-4 w-4" />
           <span>Copy Path</span>
         </ContextMenuItem>
+        
         {!isDirectory && (
           <ContextMenuItem onClick={handleDownload} className="flex items-center gap-2">
             <Download className="h-4 w-4" />

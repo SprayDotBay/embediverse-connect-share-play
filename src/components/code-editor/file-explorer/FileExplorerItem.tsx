@@ -21,7 +21,7 @@ export const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
 }) => {
   const [isRenaming, setIsRenaming] = useState(false);
   const [newName, setNewName] = useState(item.name);
-  const { handleRename, handleDelete, fileContents } = useCodeEditor();
+  const { handleRename, handleDelete, handleDuplicateFile, fileContents } = useCodeEditor();
 
   const onRenameStart = (file: FileItem) => {
     setNewName(file.name);
@@ -36,12 +36,18 @@ export const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
   const onDeleteConfirm = (file: FileItem) => {
     handleDelete(file);
   };
+  
+  const onDuplicateConfirm = (file: FileItem) => {
+    handleDuplicateFile(file);
+  };
 
   const renderFolderItem = () => (
     <FileContextMenu 
       item={item} 
       onRename={onRenameStart} 
       onDelete={onDeleteConfirm}
+      onDuplicate={onDuplicateConfirm}
+      fileContents={fileContents}
     >
       <div className="mb-2">
         <div 
@@ -78,6 +84,7 @@ export const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
       item={item} 
       onRename={onRenameStart} 
       onDelete={onDeleteConfirm}
+      onDuplicate={onDuplicateConfirm}
       fileContents={fileContents}
     >
       <div

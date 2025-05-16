@@ -22,6 +22,42 @@ export const useFileOperations = () => {
     });
   }, [activeFile]);
   
+  // Handle duplicating a file
+  const handleDuplicateFile = useCallback((file: FileItem) => {
+    const { handleCreateFile, getFileParentPath } = fileExplorerHooks;
+    
+    if (file.type === 'directory') {
+      toast({
+        title: "Not Supported",
+        description: "Duplicating folders is not supported yet",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const parentPath = getFileParentPath(file.path);
+    const fileName = file.name;
+    const fileExtension = fileName.includes('.') ? `.${fileName.split('.').pop()}` : '';
+    const fileBaseName = fileName.includes('.') ? fileName.substring(0, fileName.lastIndexOf('.')) : fileName;
+    const newFileName = `${fileBaseName}_copy${fileExtension}`;
+    
+    // Create the new file
+    const newFilePath = handleCreateFile(parentPath, newFileName);
+    
+    // Copy the content if available
+    if (fileContents[file.path]) {
+      setFileContents(prev => ({
+        ...prev,
+        [newFilePath]: fileContents[file.path]
+      }));
+    }
+    
+    toast({
+      title: "File Duplicated",
+      description: `${fileName} duplicated as ${newFileName}.`
+    });
+  }, [fileExplorerHooks, fileContents, setFileContents]);
+  
   // Process a file uploaded by the user
   const processImportedFile = useCallback(async (file: File): Promise<string | null> => {
     const { setFileContents, handleCreateFile, getFileParentPath } = fileExplorerHooks;
@@ -74,6 +110,7 @@ export const useFileOperations = () => {
     ...editorUtils,
     ...editorActions,
     handleSave,
+    handleDuplicateFile,
     processImportedFile,
     fileContents,
     setFileContents
