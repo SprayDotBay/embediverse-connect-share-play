@@ -68,7 +68,7 @@ export const FileVersionHistory: React.FC<FileVersionHistoryProps> = ({
                   <div className="flex justify-between items-center">
                     <span className="font-medium">{version.description}</span>
                     <span className="text-xs text-muted-foreground">
-                      {formatDate && formatDate(version.timestamp)}
+                      {formatDate(version.timestamp)}
                     </span>
                   </div>
                   

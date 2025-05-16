@@ -25,7 +25,8 @@ export const CodeEditorPanel: React.FC = () => {
     setFileContents,
     setFiles,
     files,
-    processImportedFile
+    processImportedFile,
+    getFileName
   } = useCodeEditor();
   
   const [githubDialogOpen, setGithubDialogOpen] = useState(false);
@@ -35,7 +36,7 @@ export const CodeEditorPanel: React.FC = () => {
   // Handle downloading the current file
   const handleDownload = () => {
     if (activeFile) {
-      const fileName = activeFile.split('/').pop() || 'code.txt';
+      const fileName = getFileName(activeFile);
       downloadFile(fileName, fileContents[activeFile] || '');
       toast({
         title: "File Downloaded",
@@ -65,6 +66,11 @@ export const CodeEditorPanel: React.FC = () => {
       description: `Successfully imported ${Object.keys(importedContents).length} files from GitHub.`
     });
   };
+
+  // Wrapper for upload function to match expected signature
+  const handleUploadWrapper = () => {
+    handleUpload(true); // Assuming true is for connected state
+  };
   
   return (
     <Card className="col-span-2 h-full overflow-hidden flex flex-col">
@@ -73,12 +79,12 @@ export const CodeEditorPanel: React.FC = () => {
         onTabChange={setActiveTab}
         onVerify={handleVerify}
         onFormat={handleFormat}
-        onUpload={handleUpload}
+        onUpload={handleUploadWrapper}
         onSave={handleSave}
         onDownload={handleDownload}
         onImport={handleImport}
         onGithubImport={handleGithubImport}
-        filename={activeFile.split('/').pop() || ''}
+        filename={getFileName(activeFile)}
       />
       
       <EditorTabs

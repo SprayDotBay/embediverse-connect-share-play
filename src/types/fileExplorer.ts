@@ -39,6 +39,8 @@ export interface FileOperationsContextValue {
   setFileVersions: React.Dispatch<React.SetStateAction<Record<string, FileVersion[]>>>;
   handleSaveVersion: (description: string) => void;
   handleRestoreVersion: (filePath: string, versionIndex: number) => void;
+  exportVersionHistory: (filePath: string) => void;
+  formatDate: (timestamp: number) => string;
   
   // Utils
   findFileInTree: (fileTree: FileItem[], path: string) => FileItem | null;
@@ -55,7 +57,7 @@ export interface CodeEditorState {
   handleCodeChange: (value: string | undefined) => void;
   handleVerify: () => void;
   handleFormat: () => void;
-  handleUpload: () => void;
+  handleUpload: (isConnected: boolean) => void;
   getEditorLanguage: (filePath: string) => string;
   activeFile: string;
 }
