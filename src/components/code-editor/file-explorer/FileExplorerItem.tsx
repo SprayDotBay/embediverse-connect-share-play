@@ -14,6 +14,10 @@ interface FileExplorerItemProps {
   onToggleFolder: (folder: FileItem) => void;
 }
 
+/**
+ * Component that renders a single file or folder item in the explorer
+ * Supports context menu operations and integrates with version history
+ */
 export const FileExplorerItem: React.FC<FileExplorerItemProps> = ({ 
   item, 
   onFileSelect, 
@@ -21,7 +25,13 @@ export const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
 }) => {
   const [isRenaming, setIsRenaming] = useState(false);
   const [newName, setNewName] = useState(item.name);
-  const { handleRename, handleDelete, handleDuplicateFile, fileContents } = useCodeEditor();
+  const { 
+    handleRename, 
+    handleDelete, 
+    handleDuplicateFile, 
+    fileContents,
+    handleSaveVersion 
+  } = useCodeEditor();
 
   const onRenameStart = (file: FileItem) => {
     setNewName(file.name);
@@ -39,6 +49,13 @@ export const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
   
   const onDuplicateConfirm = (file: FileItem) => {
     handleDuplicateFile(file);
+  };
+  
+  const onSaveVersion = (file: FileItem) => {
+    const description = window.prompt("Enter a description for this version:", `${file.name} - version`);
+    if (description) {
+      handleSaveVersion(description);
+    }
   };
 
   const renderFolderItem = () => (
@@ -86,6 +103,7 @@ export const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
       onDelete={onDeleteConfirm}
       onDuplicate={onDuplicateConfirm}
       fileContents={fileContents}
+      onSaveVersion={onSaveVersion}
     >
       <div
         className={`flex items-center gap-1 text-sm cursor-pointer hover:text-foreground transition-colors ${

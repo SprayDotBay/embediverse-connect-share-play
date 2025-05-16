@@ -5,22 +5,39 @@ import { useFileExplorer } from "./useFileExplorer";
 import { useCodeEditorState } from "./useCodeEditor";
 import { useEditorUtils } from "./useEditorUtils";
 import { useCodeEditorActions } from "./useCodeEditor";
+import { useFileVersionHistory } from "./useFileVersionHistory";
 import { FileItem } from '@/types/fileExplorer';
 
+/**
+ * Main hook for file operations in the code editor
+ * Combines functionality from multiple specialized hooks to provide a complete
+ * file management system with version history
+ */
 export const useFileOperations = () => {
+  // Get file explorer hooks for basic file operations
   const fileExplorerHooks = useFileExplorer();
   const { activeFile, fileContents, setFileContents } = fileExplorerHooks;
+  
+  // Get editor state, utilities, and actions
   const editorHooks = useCodeEditorState({ activeFile });
   const editorUtils = useEditorUtils(activeFile);
   const editorActions = useCodeEditorActions();
   
-  // Handle saving files
-  const handleSave = useCallback(() => {
+  // Initialize version history management
+  const versionHooks = useFileVersionHistory(activeFile, fileContents, setFileContents);
+  
+  // Handle saving files with optional version creation
+  const handleSave = useCallback((createVersion = false, versionDescription = '') => {
+    // If createVersion is true, also save a version
+    if (createVersion) {
+      versionHooks.handleSaveVersion(versionDescription);
+    }
+    
     toast({
       title: "File Saved",
       description: `${activeFile.split('/').pop() || ''} saved successfully.`,
     });
-  }, [activeFile]);
+  }, [activeFile, versionHooks]);
   
   // Handle duplicating a file
   const handleDuplicateFile = useCallback((file: FileItem) => {
@@ -109,10 +126,9 @@ export const useFileOperations = () => {
     ...editorHooks,
     ...editorUtils,
     ...editorActions,
+    ...versionHooks,
     handleSave,
     handleDuplicateFile,
-    processImportedFile,
-    fileContents,
-    setFileContents
+    processImportedFile
   };
 };

@@ -1,12 +1,28 @@
 
+/**
+ * CodeEditorContext: Main context provider for the code editor functionality
+ * 
+ * This file sets up the context API for the entire code editor, combining:
+ * - File explorer operations
+ * - Code editing features
+ * - Device control functionality
+ * - Project templates
+ * - Version history management
+ */
 import React, { createContext, useContext } from 'react';
-import { FileOperationsContextValue } from '@/types/fileExplorer';
+import { FileOperationsContextValue, CodeEditorState, ProjectTemplateActions, DeviceControlFeatures } from '@/types/fileExplorer';
 import { useFileOperations } from "@/hooks/code-editor/useFileOperations";
 import { useCodeEditorState } from "@/hooks/code-editor/useCodeEditor";
 import { useProjectTemplates } from "@/hooks/code-editor/useProjectTemplates";
 
-// Create the context
-const CodeEditorContext = createContext<FileOperationsContextValue | undefined>(undefined);
+// Create the context with all required properties from the combined types
+type CombinedContextValue = FileOperationsContextValue & 
+                           Partial<CodeEditorState> & 
+                           Partial<ProjectTemplateActions> & 
+                           Partial<DeviceControlFeatures>;
+
+// Create the context with undefined as default value
+const CodeEditorContext = createContext<CombinedContextValue | undefined>(undefined);
 
 // Custom hook to use the code editor context
 export const useCodeEditor = () => {
@@ -25,8 +41,8 @@ export const CodeEditorProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   });
   const projectTemplates = useProjectTemplates();
 
-  // Define the context value
-  const contextValue: FileOperationsContextValue = {
+  // Define the context value by combining all hooks
+  const contextValue: CombinedContextValue = {
     ...fileOps,
     ...editorState,
     ...projectTemplates
