@@ -1,147 +1,49 @@
-
-import React, { createContext, useContext, ReactNode, useEffect } from 'react';
-import { FileItem } from "@/types/fileExplorer";
-import { SerialMessage } from "@/hooks/code-editor/useSerialMonitor";
+import React, { createContext, useContext } from 'react';
+import { FileOperationsContextValue } from '@/types/fileExplorer';
 import { useFileOperations } from "@/hooks/code-editor/useFileOperations";
-import { useSerialMonitor } from "@/hooks/code-editor/useSerialMonitor";
-import { useBleManager } from "@/hooks/code-editor/useBleManager";
-import { useGpioControl } from "@/hooks/code-editor/useGpioControl";
+import { useCodeEditorState } from "@/hooks/code-editor/useCodeEditor";
 import { useProjectTemplates } from "@/hooks/code-editor/useProjectTemplates";
+import { useSerialMonitor } from "@/hooks/serial-monitor/useSerialMonitor";
+import { useBleManager } from "@/hooks/ble/useBleManager";
 
-// Make sure our context type includes the new file explorer operations
-interface CodeEditorContextType {
-  // File explorer and editor state
-  files: FileItem[];
-  setFiles: React.Dispatch<React.SetStateAction<FileItem[]>>;
-  activeFile: string;
-  setActiveFile: React.Dispatch<React.SetStateAction<string>>;
-  fileContents: Record<string, string>;
-  setFileContents: React.Dispatch<React.SetStateAction<Record<string, string>>>;
-  activeTab: string;
-  setActiveTab: React.Dispatch<React.SetStateAction<string>>;
-  activeDeviceTab: string;
-  setActiveDeviceTab: React.Dispatch<React.SetStateAction<string>>;
-  
-  // Serial communication state
-  serialMessages: SerialMessage[];
-  setSerialMessages: React.Dispatch<React.SetStateAction<SerialMessage[]>>;
-  
-  // Serial port hooks
-  serialHooks: ReturnType<typeof import("@/hooks/useSerialPort").useSerialPort>;
-  
-  // BLE hooks
-  bleHooks: ReturnType<typeof import("@/hooks/useBleDevice").useBleDevice>;
-  
-  // GPIO pins state
-  gpioPinsHooks: ReturnType<typeof import("@/hooks/useGpioPins").useGpioPins>;
-  
-  // Enhanced file operations
-  handleFileSelect: (file: FileItem) => void;
-  handleToggleFolder: (folder: FileItem) => void;
-  handleCreateFile: (parentPath: string, fileName: string) => string;
-  handleCreateFolder: (parentPath: string, folderName: string) => void;
-  handleRename: (file: FileItem, newName: string) => void;
-  handleDelete: (file: FileItem) => void;
-  findFileInTree: (fileTree: FileItem[], path: string) => FileItem | null;
-  getFileParentPath: (filePath: string) => string;
-  getFileName: (filePath: string) => string;
-  processImportedFile: (file: File) => Promise<string | null>;
-  
-  // Editor actions
-  handleCodeChange: (value: string | undefined) => void;
-  handleVerify: () => void;
-  handleFormat: () => void;
-  handleUpload: () => void;
-  handleSave: () => void;
-  
-  // Serial communication handlers
-  handleSendSerialMessage: (message: string) => void;
-  handleSerialConnect: (portPath: string) => Promise<void>;
-  handleBleConnect: (deviceId: string) => Promise<void>;
-  handleClearSerialMessages: () => void;
-  handleExportSerialMessages: () => void;
-  
-  // GPIO pin handlers
-  handleGpioPinChange: (pin: number, value: boolean) => void;
-  
-  // Project templates
-  handleCreateEsp32Project: () => void;
-  
-  // Utilities
-  getEditorLanguage: () => string;
-}
+// Create the context
+const CodeEditorContext = createContext<FileOperationsContextValue | undefined>(undefined);
 
-const CodeEditorContext = createContext<CodeEditorContextType | null>(null);
+// Custom hook to use the code editor context
+export const useCodeEditor = () => {
+  const context = useContext(CodeEditorContext);
+  if (!context) {
+    throw new Error("useCodeEditor must be used within a CodeEditorProvider");
+  }
+  return context;
+};
 
-export const CodeEditorProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // Initialize hooks with unified structure
-  const fileOperations = useFileOperations();
-  const serialMonitorHooks = useSerialMonitor();
-  const bleManagerHooks = useBleManager();
-  const gpioControlHooks = useGpioControl(
-    serialMonitorHooks.serialHooks,
-    serialMonitorHooks.setSerialMessages
-  );
-  
-  const projectTemplateHooks = useProjectTemplates({
-    setFileContents: fileOperations.setFileContents,
-    handleFileSelect: fileOperations.handleFileSelect,
+export const CodeEditorProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Initialize our hooks
+  const fileOps = useFileOperations();
+  const editorState = useCodeEditorState({
+    activeFile: fileOps.activeFile
   });
+  const projectTemplates = useProjectTemplates({
+    setFiles: fileOps.setFiles,
+    setFileContents: fileOps.setFileContents,
+    setActiveFile: fileOps.setActiveFile
+  });
+  const serialMonitor = useSerialMonitor();
+  const bleManager = useBleManager();
 
-  // Process GPIO data from serial messages
-  useEffect(() => {
-    // Set up a watcher for serial messages to process GPIO data
-    const processGpioData = (message: SerialMessage) => {
-      if (message.type === 'received') {
-        gpioControlHooks.gpioPinsHooks.processSerialData(message.content);
-      }
-    };
-
-    // Process the last message if it exists
-    const lastMessage = serialMonitorHooks.serialMessages[serialMonitorHooks.serialMessages.length - 1];
-    if (lastMessage) {
-      processGpioData(lastMessage);
-    }
-  }, [serialMonitorHooks.serialMessages, gpioControlHooks.gpioPinsHooks]);
-
-  // Adapter function for upload that uses the serial connection status
-  const handleUpload = () => {
-    fileOperations.handleUpload(
-      serialMonitorHooks.serialHooks.isConnected || bleManagerHooks.bleHooks.isConnected
-    );
+  // Define the context value
+  const contextValue: FileOperationsContextValue = {
+    ...fileOps,
+    ...editorState,
+    ...projectTemplates,
+    ...serialMonitor,
+    ...bleManager
   };
 
   return (
-    <CodeEditorContext.Provider
-      value={{
-        // File operations
-        ...fileOperations,
-        
-        // Serial monitor
-        ...serialMonitorHooks,
-        
-        // BLE manager
-        ...bleManagerHooks,
-        
-        // GPIO control
-        ...gpioControlHooks,
-        
-        // Project templates
-        ...projectTemplateHooks,
-        
-        // Override upload to check connection status
-        handleUpload
-      }}
-    >
+    <CodeEditorContext.Provider value={contextValue}>
       {children}
     </CodeEditorContext.Provider>
   );
-};
-
-export const useCodeEditor = (): CodeEditorContextType => {
-  const context = useContext(CodeEditorContext);
-  if (!context) {
-    throw new Error('useCodeEditor must be used within a CodeEditorProvider');
-  }
-  return context;
 };

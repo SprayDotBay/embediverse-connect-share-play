@@ -9,7 +9,7 @@ import { FileItem } from '@/types/fileExplorer';
 
 export const useFileOperations = () => {
   const fileExplorerHooks = useFileExplorer();
-  const { activeFile } = fileExplorerHooks;
+  const { activeFile, fileContents, setFileContents } = fileExplorerHooks;
   const editorHooks = useCodeEditorState({ activeFile });
   const editorUtils = useEditorUtils(activeFile);
   const editorActions = useCodeEditorActions();
@@ -74,6 +74,8 @@ export const useFileOperations = () => {
     ...editorUtils,
     ...editorActions,
     handleSave,
-    processImportedFile
+    processImportedFile,
+    fileContents,
+    setFileContents
   };
 };

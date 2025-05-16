@@ -1,7 +1,12 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { ArrowDown, ArrowRight, FileCode, FolderIcon } from "lucide-react";
 import { FileItem } from "@/types/fileExplorer";
+import { FileContextMenu } from "./FileContextMenu";
+import { useCodeEditor } from "@/contexts/CodeEditorContext";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface FileExplorerItemProps {
   item: FileItem;
@@ -14,8 +19,30 @@ export const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
   onFileSelect, 
   onToggleFolder 
 }) => {
-  if (item.type === "directory") {
-    return (
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [newName, setNewName] = useState(item.name);
+  const { handleRename, handleDelete, fileContents } = useCodeEditor();
+
+  const onRenameStart = (file: FileItem) => {
+    setNewName(file.name);
+    setIsRenaming(true);
+  };
+
+  const onRenameConfirm = () => {
+    handleRename(item, newName);
+    setIsRenaming(false);
+  };
+
+  const onDeleteConfirm = (file: FileItem) => {
+    handleDelete(file);
+  };
+
+  const renderFolderItem = () => (
+    <FileContextMenu 
+      item={item} 
+      onRename={onRenameStart} 
+      onDelete={onDeleteConfirm}
+    >
       <div className="mb-2">
         <div 
           className="flex items-center gap-1 text-sm font-medium cursor-pointer hover:text-primary transition-colors"
@@ -43,11 +70,17 @@ export const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
           </div>
         )}
       </div>
-    );
-  } else {
-    return (
+    </FileContextMenu>
+  );
+
+  const renderFileItem = () => (
+    <FileContextMenu 
+      item={item} 
+      onRename={onRenameStart} 
+      onDelete={onDeleteConfirm}
+      fileContents={fileContents}
+    >
       <div
-        key={item.path}
         className={`flex items-center gap-1 text-sm cursor-pointer hover:text-foreground transition-colors ${
           item.isActive ? 'text-primary' : 'text-muted-foreground'
         }`}
@@ -56,6 +89,39 @@ export const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
         <FileCode className="h-4 w-4" />
         <span>{item.name}</span>
       </div>
-    );
-  }
+    </FileContextMenu>
+  );
+
+  return (
+    <>
+      {item.type === "directory" ? renderFolderItem() : renderFileItem()}
+      
+      <Dialog open={isRenaming} onOpenChange={setIsRenaming}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Rename {item.type === "directory" ? "Folder" : "File"}</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <Input
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              className="w-full"
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') onRenameConfirm();
+              }}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsRenaming(false)}>
+              Cancel
+            </Button>
+            <Button onClick={onRenameConfirm}>
+              Rename
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
 };
