@@ -35,7 +35,7 @@ export const CodeEditorPanel: React.FC = () => {
   
   // Handle downloading the current file
   const handleDownload = () => {
-    if (activeFile) {
+    if (activeFile && getFileName) {
       const fileName = getFileName(activeFile);
       downloadFile(fileName, fileContents[activeFile] || '');
       toast({
@@ -53,13 +53,17 @@ export const CodeEditorPanel: React.FC = () => {
   // Process imported GitHub files
   const handleGithubImportComplete = (importedContents: Record<string, string>, importedFiles: FileItem[]) => {
     // Update file contents
-    setFileContents(prev => ({
-      ...prev,
-      ...importedContents
-    }));
+    if (setFileContents) {
+      setFileContents(prev => ({
+        ...prev,
+        ...importedContents
+      }));
+    }
     
     // Update file explorer with new structure
-    setFiles(importedFiles);
+    if (setFiles) {
+      setFiles(importedFiles);
+    }
     
     toast({
       title: "GitHub Import Complete",
@@ -69,7 +73,9 @@ export const CodeEditorPanel: React.FC = () => {
 
   // Wrapper for upload function to match expected signature
   const handleUploadWrapper = () => {
-    handleUpload(true); // Assuming true is for connected state
+    if (handleUpload) {
+      handleUpload(true); // Assuming true is for connected state
+    }
   };
   
   return (
@@ -84,7 +90,7 @@ export const CodeEditorPanel: React.FC = () => {
         onDownload={handleDownload}
         onImport={handleImport}
         onGithubImport={handleGithubImport}
-        filename={getFileName(activeFile)}
+        filename={activeFile && getFileName ? getFileName(activeFile) : ''}
       />
       
       <EditorTabs

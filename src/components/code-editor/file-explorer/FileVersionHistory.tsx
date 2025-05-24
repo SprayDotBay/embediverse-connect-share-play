@@ -35,8 +35,8 @@ export const FileVersionHistory: React.FC<FileVersionHistoryProps> = ({
     getFileName
   } = useCodeEditor();
 
-  const versions = fileVersions[filePath] || [];
-  const fileName = getFileName(filePath);
+  const versions = fileVersions?.[filePath] || [];
+  const fileName = getFileName ? getFileName(filePath) : filePath.split('/').pop() || 'Unknown';
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -68,7 +68,7 @@ export const FileVersionHistory: React.FC<FileVersionHistoryProps> = ({
                   <div className="flex justify-between items-center">
                     <span className="font-medium">{version.description}</span>
                     <span className="text-xs text-muted-foreground">
-                      {formatDate(version.timestamp)}
+                      {formatDate ? formatDate(version.timestamp) : new Date(version.timestamp).toLocaleString()}
                     </span>
                   </div>
                   
@@ -76,8 +76,9 @@ export const FileVersionHistory: React.FC<FileVersionHistoryProps> = ({
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleRestoreVersion(filePath, index)}
+                      onClick={() => handleRestoreVersion && handleRestoreVersion(filePath, index)}
                       className="h-8"
+                      disabled={!handleRestoreVersion}
                     >
                       <RotateCcw className="h-3.5 w-3.5 mr-1" />
                       Restore
@@ -98,8 +99,8 @@ export const FileVersionHistory: React.FC<FileVersionHistoryProps> = ({
         <div className="flex justify-between items-center mt-2">
           <Button
             variant="outline"
-            onClick={() => exportVersionHistory(filePath)}
-            disabled={versions.length === 0}
+            onClick={() => exportVersionHistory && exportVersionHistory(filePath)}
+            disabled={versions.length === 0 || !exportVersionHistory}
           >
             <Download className="h-4 w-4 mr-2" />
             Export History
