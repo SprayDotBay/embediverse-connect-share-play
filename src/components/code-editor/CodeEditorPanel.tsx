@@ -99,7 +99,7 @@ export const CodeEditorPanel: React.FC = () => {
         fileContents={fileContents}
         activeFile={activeFile}
         handleCodeChange={handleCodeChange}
-        getEditorLanguage={getEditorLanguage}
+        getEditorLanguage={getEditorLanguage || (() => 'javascript')}
       />
       
       {/* GitHub import dialog */}

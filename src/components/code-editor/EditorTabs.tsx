@@ -9,7 +9,7 @@ interface EditorTabsProps {
   fileContents: Record<string, string>;
   activeFile: string;
   handleCodeChange: (value: string | undefined) => void;
-  getEditorLanguage: () => string;
+  getEditorLanguage: (filePath: string) => string;
 }
 
 export const EditorTabs: React.FC<EditorTabsProps> = ({
@@ -25,7 +25,7 @@ export const EditorTabs: React.FC<EditorTabsProps> = ({
       <TabsContent value="code" className="flex-1 overflow-hidden m-0 p-0">
         <MonacoEditor
           code={fileContents[activeFile] || ''}
-          language={getEditorLanguage()}
+          language={getEditorLanguage(activeFile)}
           onChange={handleCodeChange}
           theme="vs-dark"
           options={{
@@ -64,7 +64,7 @@ export const EditorTabs: React.FC<EditorTabsProps> = ({
           <div className="w-1/2 border-r">
             <MonacoEditor
               code={fileContents[activeFile] || ''}
-              language={getEditorLanguage()}
+              language={getEditorLanguage(activeFile)}
               onChange={handleCodeChange}
               theme="vs-dark"
               options={{

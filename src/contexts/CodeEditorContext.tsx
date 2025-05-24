@@ -39,7 +39,10 @@ export const CodeEditorProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const editorState = useCodeEditorState({
     activeFile: fileOps.activeFile
   });
-  const projectTemplates = useProjectTemplates();
+  const projectTemplates = useProjectTemplates({
+    setFileContents: fileOps.setFileContents,
+    handleFileSelect: fileOps.handleFileSelect
+  });
 
   // Define the context value by combining all hooks
   const contextValue: CombinedContextValue = {
