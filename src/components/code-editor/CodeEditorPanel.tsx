@@ -19,7 +19,7 @@ export const CodeEditorPanel: React.FC = () => {
     handleCodeChange, 
     handleVerify, 
     handleFormat, 
-    handleUpload, 
+    handleUpload,
     handleSave,
     getEditorLanguage,
     setFileContents,
@@ -71,10 +71,10 @@ export const CodeEditorPanel: React.FC = () => {
     });
   };
 
-  // Wrapper for upload function to match expected signature
+  // Wrapper for upload function to match expected signature - pass true as default for connected state
   const handleUploadWrapper = () => {
     if (handleUpload) {
-      handleUpload();
+      handleUpload(true); // Pass true as default connected state
     }
   };
   
