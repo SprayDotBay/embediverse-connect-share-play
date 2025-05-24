@@ -31,13 +31,13 @@ export const CodeEditorPanel: React.FC = () => {
   
   const [githubDialogOpen, setGithubDialogOpen] = useState(false);
   
-  const { handleImport } = useImportActions({ processImportedFile });
+  const { handleImport } = useImportActions({ processImportedFile: processImportedFile || (async () => null) });
   
   // Handle downloading the current file
   const handleDownload = () => {
     if (activeFile && getFileName) {
       const fileName = getFileName(activeFile);
-      downloadFile(fileName, fileContents[activeFile] || '');
+      downloadFile(fileName, fileContents?.[activeFile] || '');
       toast({
         title: "File Downloaded",
         description: `${fileName} has been downloaded to your computer.`
@@ -74,19 +74,19 @@ export const CodeEditorPanel: React.FC = () => {
   // Wrapper for upload function to match expected signature
   const handleUploadWrapper = () => {
     if (handleUpload) {
-      handleUpload(true); // Assuming true is for connected state
+      handleUpload();
     }
   };
   
   return (
     <Card className="col-span-2 h-full overflow-hidden flex flex-col">
       <EditorToolbar
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        onVerify={handleVerify}
-        onFormat={handleFormat}
+        activeTab={activeTab || "code"}
+        onTabChange={setActiveTab || (() => {})}
+        onVerify={handleVerify || (() => {})}
+        onFormat={handleFormat || (() => {})}
         onUpload={handleUploadWrapper}
-        onSave={handleSave}
+        onSave={handleSave || (() => {})}
         onDownload={handleDownload}
         onImport={handleImport}
         onGithubImport={handleGithubImport}
@@ -94,11 +94,11 @@ export const CodeEditorPanel: React.FC = () => {
       />
       
       <EditorTabs
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        fileContents={fileContents}
-        activeFile={activeFile}
-        handleCodeChange={handleCodeChange}
+        activeTab={activeTab || "code"}
+        setActiveTab={setActiveTab || (() => {})}
+        fileContents={fileContents || {}}
+        activeFile={activeFile || ""}
+        handleCodeChange={handleCodeChange || (() => {})}
         getEditorLanguage={getEditorLanguage || (() => 'javascript')}
       />
       

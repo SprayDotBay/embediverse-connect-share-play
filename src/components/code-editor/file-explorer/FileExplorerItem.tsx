@@ -39,21 +39,27 @@ export const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
   };
 
   const onRenameConfirm = () => {
-    handleRename(item, newName);
+    if (handleRename) {
+      handleRename(item, newName);
+    }
     setIsRenaming(false);
   };
 
   const onDeleteConfirm = (file: FileItem) => {
-    handleDelete(file);
+    if (handleDelete) {
+      handleDelete(file);
+    }
   };
   
   const onDuplicateConfirm = (file: FileItem) => {
-    handleDuplicateFile(file);
+    if (handleDuplicateFile) {
+      handleDuplicateFile(file);
+    }
   };
   
   const onSaveVersion = (file: FileItem) => {
     const description = window.prompt("Enter a description for this version:", `${file.name} - version`);
-    if (description) {
+    if (description && handleSaveVersion) {
       handleSaveVersion(description);
     }
   };
@@ -64,7 +70,7 @@ export const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
       onRename={onRenameStart} 
       onDelete={onDeleteConfirm}
       onDuplicate={onDuplicateConfirm}
-      fileContents={fileContents}
+      fileContents={fileContents || {}}
     >
       <div className="mb-2">
         <div 
@@ -102,7 +108,7 @@ export const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
       onRename={onRenameStart} 
       onDelete={onDeleteConfirm}
       onDuplicate={onDuplicateConfirm}
-      fileContents={fileContents}
+      fileContents={fileContents || {}}
       onSaveVersion={onSaveVersion}
     >
       <div

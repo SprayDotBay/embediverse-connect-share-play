@@ -1,15 +1,19 @@
 
-import { useCallback } from 'react';
 import { getLanguageFromFile } from "@/utils/codeTemplates";
 
-// Utility functions for code editor
 export const useEditorUtils = (activeFile: string) => {
-  // Get the current active file language for the editor
-  const getEditorLanguage = useCallback(() => {
-    return getLanguageFromFile(activeFile);
-  }, [activeFile]);
+  // Get the appropriate language for Monaco Editor based on file extension
+  const getEditorLanguage = (filePath: string): string => {
+    return getLanguageFromFile(filePath);
+  };
+
+  // Get just the filename from a full path
+  const getFileName = (filePath: string): string => {
+    return filePath.split('/').pop() || '';
+  };
 
   return {
-    getEditorLanguage
+    getEditorLanguage,
+    getFileName
   };
 };

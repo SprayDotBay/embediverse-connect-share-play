@@ -38,6 +38,28 @@ export const FileVersionHistory: React.FC<FileVersionHistoryProps> = ({
   const versions = fileVersions?.[filePath] || [];
   const fileName = getFileName ? getFileName(filePath) : filePath.split('/').pop() || 'Unknown';
 
+  // Fallback format date function
+  const formatVersionDate = (timestamp: number): string => {
+    if (formatDate) {
+      return formatDate(timestamp);
+    }
+    return new Date(timestamp).toLocaleString();
+  };
+
+  // Handle restore with safety check
+  const handleRestore = (index: number) => {
+    if (handleRestoreVersion) {
+      handleRestoreVersion(filePath, index);
+    }
+  };
+
+  // Handle export with safety check
+  const handleExport = () => {
+    if (exportVersionHistory) {
+      exportVersionHistory(filePath);
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
@@ -68,7 +90,7 @@ export const FileVersionHistory: React.FC<FileVersionHistoryProps> = ({
                   <div className="flex justify-between items-center">
                     <span className="font-medium">{version.description}</span>
                     <span className="text-xs text-muted-foreground">
-                      {formatDate ? formatDate(version.timestamp) : new Date(version.timestamp).toLocaleString()}
+                      {formatVersionDate(version.timestamp)}
                     </span>
                   </div>
                   
@@ -76,7 +98,7 @@ export const FileVersionHistory: React.FC<FileVersionHistoryProps> = ({
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleRestoreVersion && handleRestoreVersion(filePath, index)}
+                      onClick={() => handleRestore(index)}
                       className="h-8"
                       disabled={!handleRestoreVersion}
                     >
@@ -99,7 +121,7 @@ export const FileVersionHistory: React.FC<FileVersionHistoryProps> = ({
         <div className="flex justify-between items-center mt-2">
           <Button
             variant="outline"
-            onClick={() => exportVersionHistory && exportVersionHistory(filePath)}
+            onClick={handleExport}
             disabled={versions.length === 0 || !exportVersionHistory}
           >
             <Download className="h-4 w-4 mr-2" />

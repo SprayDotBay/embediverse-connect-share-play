@@ -48,7 +48,13 @@ export const CodeEditorProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const contextValue: CombinedContextValue = {
     ...fileOps,
     ...editorState,
-    ...projectTemplates
+    ...projectTemplates,
+    // Ensure handleUpload has correct signature
+    handleUpload: () => {
+      if (fileOps.handleUpload) {
+        fileOps.handleUpload(true); // Default to connected state
+      }
+    }
   };
 
   return (
