@@ -71,7 +71,7 @@ export const CodeEditorPanel: React.FC = () => {
     });
   };
 
-  // Wrapper for upload function to match expected signature - pass true as default for connected state
+  // Wrapper for upload function - simplified to match expected signature
   const handleUploadWrapper = () => {
     if (handleUpload) {
       handleUpload(true); // Pass true as default connected state
