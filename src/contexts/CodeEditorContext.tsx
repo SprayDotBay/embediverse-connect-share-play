@@ -18,6 +18,7 @@ import { useSerialPort } from "@/hooks/useSerialPort";
 import { useBleDevice } from "@/hooks/useBleDevice";
 import { useGpioPins } from "@/hooks/useGpioPins";
 import { useBleManager } from "@/hooks/code-editor/useBleManager";
+import { useEditorUtils } from "@/hooks/code-editor/useEditorUtils";
 
 // Create the context with all required properties from the combined types
 type CombinedContextValue = FileOperationsContextValue & 
@@ -47,6 +48,7 @@ export const CodeEditorProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const editorState = useCodeEditorState({
     activeFile: fileOps.activeFile
   });
+  const editorUtils = useEditorUtils(fileOps.activeFile || "");
   const projectTemplates = useProjectTemplates({
     setFileContents: fileOps.setFileContents,
     handleFileSelect: fileOps.handleFileSelect
@@ -101,6 +103,8 @@ export const CodeEditorProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     ...fileOps,
     // Editor state
     ...editorState,
+    // Editor utilities
+    ...editorUtils,
     // Project templates
     ...projectTemplates,
     // Device control state

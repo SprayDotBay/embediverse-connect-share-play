@@ -22,11 +22,11 @@ export const CodeEditorPanel: React.FC = () => {
     handleUpload,
     handleSave,
     getEditorLanguage,
+    getFileName,
     setFileContents,
     setFiles,
     files,
-    processImportedFile,
-    getFileName
+    processImportedFile
   } = useCodeEditor();
   
   const [githubDialogOpen, setGithubDialogOpen] = useState(false);
@@ -99,7 +99,7 @@ export const CodeEditorPanel: React.FC = () => {
         fileContents={fileContents || {}}
         activeFile={activeFile || ""}
         handleCodeChange={handleCodeChange || (() => {})}
-        getEditorLanguage={getEditorLanguage || (() => 'javascript')}
+        getEditorLanguage={(filePath: string) => getEditorLanguage ? getEditorLanguage(filePath) : 'javascript'}
       />
       
       {/* GitHub import dialog */}
