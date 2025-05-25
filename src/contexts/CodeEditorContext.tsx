@@ -66,8 +66,8 @@ export const CodeEditorProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const handleGpioPinChange = (pin: number, value: boolean) => {
     console.log("GPIO pin change:", pin, value);
-    if (gpioPinsHooks.updatePin) {
-      gpioPinsHooks.updatePin(pin, value);
+    if (gpioPinsHooks.updatePinValue) {
+      gpioPinsHooks.updatePinValue(pin, value);
     }
   };
 
@@ -111,9 +111,9 @@ export const CodeEditorProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     serialHooks,
     bleHooks,
     gpioPinsHooks,
-    // Device handlers
-    handleSerialConnect,
-    handleBleConnect,
+    // Device handlers - wrapped to match expected signatures
+    handleSerialConnect: () => handleSerialConnect(''),
+    handleBleConnect: () => handleBleConnect(''),
     handleGpioPinChange,
     handleSendSerialMessage,
     handleClearSerialMessages,
