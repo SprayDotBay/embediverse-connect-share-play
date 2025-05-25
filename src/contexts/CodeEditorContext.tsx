@@ -111,7 +111,7 @@ export const CodeEditorProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     serialHooks,
     bleHooks,
     gpioPinsHooks,
-    // Device handlers - wrapped to match expected signatures
+    // Device handlers - correctly typed to match interface expectations
     handleSerialConnect: () => handleSerialConnect(''),
     handleBleConnect: () => handleBleConnect(''),
     handleGpioPinChange,
